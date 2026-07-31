@@ -1,0 +1,176 @@
+---
+import '../styles/global.css';
+const { title, description = 'Paula Records Custodian LLC — a Records Readiness company. We help people, families, and businesses build dependable records systems.', kicker, heading, lede } = Astro.props;
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const nav = [
+  ['/about', 'About'],
+  ['/how-it-works', 'How It Works'],
+  ['/services', 'Services'],
+  ['/industries', 'Industries'],
+  ['/life-transitions', 'Life Transitions'],
+  ['/resources', 'Resources'],
+  ['/partnerships', 'Partnerships'],
+];
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title} | Paula Records Custodian</title>
+  <meta name="description" content={description} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%2316222e'/><text x='50' y='68' font-size='52' font-family='Georgia' text-anchor='middle' fill='%23a0762c'>P</text></svg>" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container bar">
+      <a class="brand" href="/">
+        <span class="mark">Paula Records <span>Custodian</span></span>
+        <span class="tag">Records Readiness</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        {nav.map(([href, label]) => (
+          <a href={href} aria-current={path === href ? 'page' : undefined}>{label}</a>
+        ))}
+        <a href="/login" aria-current={path === '/login' ? 'page' : undefined}>Client Login</a>
+        <a class="cta" href="/consultation">Book a Consultation</a>
+      </nav>
+    </div>
+  </header>
+
+  {heading && (
+    <section class="page-hero grain">
+      <div class="container">
+        {kicker && <div class="kicker">{kicker}</div>}
+        <h1>{heading}</h1>
+        {lede && <p class="lede">{lede}</p>}
+      </div>
+    </section>
+  )}
+
+  <main>
+    <slot />
+  </main>
+
+  <section class="cta-band grain">
+    <div class="container">
+      <h2>Prepare before life asks for proof.</h2>
+      <p>Start with a Records Health Check — a clear picture of what records you have, what's missing, and what to do about it.</p>
+      <div class="actions">
+        <a class="btn" href="/consultation">Book a Consultation</a>
+        <a class="btn ghost" href="/how-it-works">See How It Works</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="watermark" aria-hidden="true">PRC</div>
+    <div class="container">
+      <div class="cols">
+        <div>
+          <h4>Company</h4>
+          <ul>
+            <li><a href="/about">About PRC</a></li>
+            <li><a href="/how-it-works">How It Works</a></li>
+            <li><a href="/partnerships">Partnerships</a></li>
+            <li><a href="/consultation">Book a Consultation</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/services">Business Services</a></li>
+            <li><a href="/industries">Industries</a></li>
+            <li><a href="/life-transitions">Life Transition Services</a></li>
+            <li><a href="/intake">Client Intake</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="/resources">Resources</a></li>
+            <li><a href="/library">Records Readiness Library</a></li>
+            <li><a href="/products">Products</a></li>
+            <li><a href="/login">Client Login</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms</a></li>
+            <li><a href="/records-handling">Records Handling Notice</a></li>
+            <li><a href="/service-boundaries">Service Boundaries</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="boundary">
+        Paula Records Custodian LLC identifies, organizes, preserves, tracks, retrieves, and connects records.
+        PRC does not provide legal advice, interpret laws, determine legal rights, make accounting judgments,
+        provide medical advice, provide social-work services, or guarantee legal, tax, regulatory, funding,
+        lending, insurance, or compliance outcomes. Exact requirements should be confirmed with the appropriate
+        attorney, accountant, agency, court, insurer, lender, healthcare professional, or other qualified source.
+      </p>
+      <p class="legal">© 2026 Paula Records Custodian LLC. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // scroll reveal with stagger
+    const targets = document.querySelectorAll('.card, .section-head, .statement, .framework .cat, .wire-box, .prose > *');
+    if (!reduce && 'IntersectionObserver' in window) {
+      targets.forEach(el => el.classList.add('rv'));
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const el = e.target;
+            const siblings = [...el.parentElement.children].filter(c => c.classList.contains('rv'));
+            const idx = Math.max(0, siblings.indexOf(el));
+            el.style.transitionDelay = `${Math.min(idx * 70, 420)}ms`;
+            el.classList.add('in');
+            io.unobserve(el);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      targets.forEach(el => io.observe(el));
+    }
+
+    // 3D tilt on cards
+    if (!reduce && matchMedia('(pointer: fine)').matches) {
+      document.querySelectorAll('.card').forEach(card => {
+        let raf = 0;
+        card.addEventListener('mousemove', ev => {
+          const r = card.getBoundingClientRect();
+          const x = (ev.clientX - r.left) / r.width - 0.5;
+          const y = (ev.clientY - r.top) / r.height - 0.5;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            card.style.transform = `rotateX(${(-y * 7).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg) translateY(-4px)`;
+          });
+        });
+        card.addEventListener('mouseleave', () => {
+          cancelAnimationFrame(raf);
+          card.style.transform = '';
+        });
+      });
+
+      // hero mouse parallax on the 3D stack
+      const stack = document.querySelector('.stack3d');
+      const hero = document.querySelector('.hero');
+      if (stack && hero) {
+        hero.addEventListener('mousemove', ev => {
+          const r = hero.getBoundingClientRect();
+          const x = (ev.clientX - r.left) / r.width - 0.5;
+          const y = (ev.clientY - r.top) / r.height - 0.5;
+          stack.style.transform = `rotateY(${(x * 10).toFixed(2)}deg) rotateX(${(-y * 8).toFixed(2)}deg)`;
+        });
+        hero.addEventListener('mouseleave', () => { stack.style.transform = ''; });
+      }
+    }
+  </script>
+</body>
+</html>

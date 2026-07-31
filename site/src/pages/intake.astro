@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Client Intake"
+  kicker="Client Intake"
+  heading="Tell us about your records"
+  lede="This form starts the readiness conversation. Please do not upload or paste sensitive documents — we'll establish secure handling first."
+>
+  <section class="section">
+    <div class="container">
+      <form class="form" data-wire="intake-form-n8n" onsubmit="return false;">
+        <div class="row">
+          <div>
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" placeholder="Your name" />
+          </div>
+          <div>
+            <label for="org">Organization (if any)</label>
+            <input id="org" name="org" type="text" placeholder="Business, nonprofit, or church" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" />
+          </div>
+        </div>
+        <div>
+          <label for="type">What best describes you?</label>
+          <select id="type" name="type">
+            <option>Property owner / management company</option>
+            <option>Business or nonprofit</option>
+            <option>Individual or family</option>
+            <option>Community partner (school, church, program)</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="situation">What's happening with your records?</label>
+          <textarea id="situation" name="situation" rows="5" placeholder="Example: We just acquired a 120-unit property and the prior manager's records are incomplete…"></textarea>
+        </div>
+        <p class="note">
+          Do not include account numbers, government ID numbers, or medical details in this form.
+          General descriptions are enough to get started. See our
+          <a href="/records-handling">Records Handling Notice</a>.
+        </p>
+        <div>
+          <button class="btn" type="submit" disabled>Submit intake</button>
+          <p class="note" style="margin-top:0.6rem;">
+            <span class="wire" data-wire="intake-form-n8n">Form submission is being connected — coming soon.</span>
+            Until then, please <a href="/consultation">book a consultation</a>.
+          </p>
+        </div>
+      </form>
+    </div>
+  </section>
+</Base>

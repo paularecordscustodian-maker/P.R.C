@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Book a Consultation"
+  kicker="Book a Consultation"
+  heading="Talk with PRC about your records"
+  lede="A consultation is a conversation about where your records stand and what readiness would look like — no obligation."
+>
+  <section class="section">
+    <div class="container">
+      <div class="cards" style="grid-template-columns: 1.2fr 1fr;">
+        <div>
+          <h2 style="margin-bottom:1rem;">What to expect</h2>
+          <ul class="list-check">
+            <li>A short conversation about your situation — business transition, life event, or general readiness.</li>
+            <li>A plain-language explanation of which PRC service fits, if any.</li>
+            <li>A written scope before any engagement begins — no surprises.</li>
+            <li>No legal, tax, accounting, or medical advice — see <a href="/service-boundaries">Service Boundaries</a>.</li>
+          </ul>
+          <p style="margin-top:1.2rem; color:var(--muted);">
+            Prefer to start in writing? Fill out the <a href="/intake">client intake form</a> and we'll reach out.
+          </p>
+        </div>
+        <div class="wire-box" data-wire="scheduling-calcom">
+          <div class="big">Online scheduling coming soon</div>
+          <p>Our booking calendar is being connected. In the meantime, reach us directly:</p>
+          <p style="margin-top:0.8rem;">
+            <strong>Email:</strong> <span class="wire" data-wire="email-address">contact address coming soon</span><br/>
+          </p>
+          <p style="margin-top:0.8rem;"><a class="btn" href="/intake">Start with Client Intake</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
