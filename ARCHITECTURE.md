@@ -2,7 +2,7 @@
 
 **Status:** Phase 0 built (public website, placeholders). Wiring phases follow.
 **Source of truth for the business:** `~/Downloads/BUSINESS_PLAN(1).md` (identical to the .docx).
-**Credentials:** `~/Documents/prc credentials.txt` (Cloudflare account `f927f5a470547c6c579d03acaa18f0ed`, zone `162c04c59ac3ddfac5c31e00cabcea83`). Do not copy secrets into this repo.
+**Credentials:** kept in the operator's local credentials file (Cloudflare account + zone IDs, API tokens, Porkbun API keys). Never copy secrets or account identifiers into this repo — CI reads them from GitHub Actions secrets.
 
 ## 1. What PRC is (one paragraph)
 Records Readiness company. Helps people/families/businesses identify, organize, preserve, track, retrieve, and connect records so they're prepared before life asks for proof. Not a scanning/storage shop — the deliverable is a dependable records *system*. First sales lane: New Ownership Records Transition Review for newly acquired apartment complexes / mobile-home parks / new management companies.
@@ -72,7 +72,7 @@ Every placeholder is marked in-page with a `data-wire` attribute and a visible "
 
 ## 6. LANDMINES / open items
 1. **NS delegation pending.** Porkbun still answers for the domain. Fix: Porkbun dashboard → Authoritative Nameservers → `bjorn.ns.cloudflare.com`, `gwen.ns.cloudflare.com`. Until then only the `*.pages.dev` URL resolves publicly.
-2. **Credentials file has 4 tokens; none can write DNS.** The `cfat_…163aee27` account token works for zone lookup + Pages project/deploy/domains. All four tokens fail (`code 10000`) on the DNS-records API. After the NS flip, add the CNAMEs in the Cloudflare dashboard (Pages → prc-site → Custom domains will offer to auto-create them): `@` and `www` → `prc-site-2uj.pages.dev`, proxied.
+2. **Cloudflare token scopes are uneven.** The account token in the local credentials file handles Pages (projects/deploys/domains) + zone lookup; a separate user token handles DNS record writes. Token-to-capability mapping lives in the operator's local notes, not here.
    Live production URL: **https://prc-site-2uj.pages.dev** (deploy with `--branch main` — the Pages project's production branch is `main`; a bare deploy from `~` picks up branch `master` and lands in preview).
 3. **Service boundaries are legal surface.** PRC must never appear to give legal/accounting/medical advice — the site's copy and the footer disclaimer follow the plan's boundary language. Any new page copy must respect it.
 4. **Security prerequisites before accepting real client records** (plan §Security): MFA, encryption, audit logging, retention schedule, incident response. The intake form must NOT accept document uploads until that layer exists.
