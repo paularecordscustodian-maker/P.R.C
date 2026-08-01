@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { checklists } from '../../data/checklists';
+---
+<Base
+  title="Records Readiness Checklists"
+  kicker="Free Checklists"
+  heading="The seven-category readiness checklists"
+  lede="Work through one category at a time. Print any checklist, or save it as a PDF from your browser's print dialog."
+>
+  <section class="section">
+    <div class="container">
+      <div class="cards">
+        {checklists.map((c) => (
+          <div class="card">
+            <div class="num">Category {c.n}</div>
+            <h3>{c.title}</h3>
+            <p>{c.intro}</p>
+            <a class="more" href={`/checklists/${c.slug}`}>Open checklist →</a>
+          </div>
+        ))}
+      </div>
+      <p style="margin-top:2rem; color: var(--mutetxt); font-size: 0.92rem; max-width: 70ch;">
+        These are educational starting points describing records commonly kept in each category —
+        not legal, tax, or medical requirements. See our <a href="/service-boundaries">Service Boundaries</a>.
+      </p>
+    </div>
+  </section>
+</Base>

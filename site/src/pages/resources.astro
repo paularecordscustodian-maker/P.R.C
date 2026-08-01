@@ -12,13 +12,13 @@ import Base from '../layouts/Base.astro';
       <div class="cards">
         <div class="card">
           <h3>Records Readiness Checklists</h3>
-          <p>Category-by-category checklists: identity, health, financial, housing, employment, legal, and family records.</p>
-          <span class="wire" data-wire="download-checklists">Downloads coming soon</span>
+          <p>All seven categories — identity, health, financial, housing, employment, legal, and family — as printable checklists you can start on today.</p>
+          <a class="more" href="/checklists">Open the checklists →</a>
         </div>
         <div class="card">
           <h3>Life Event Guides</h3>
           <p>What records to gather for a first apartment, a new job, caregiving, retirement, reentry, or the loss of a loved one.</p>
-          <span class="wire" data-wire="download-guides">Downloads coming soon</span>
+          <span class="wire" data-wire="download-guides">Guides in production — join the list below</span>
         </div>
         <div class="card">
           <h3>Records Request Center</h3>
@@ -28,13 +28,31 @@ import Base from '../layouts/Base.astro';
         <div class="card">
           <h3>Business Transition Worksheets</h3>
           <p>What to demand in the data room when buying a property or business — the records that should transfer with the keys.</p>
-          <span class="wire" data-wire="download-worksheets">Downloads coming soon</span>
+          <span class="wire" data-wire="download-worksheets">In production — join the list below</span>
         </div>
       </div>
     </div>
   </section>
 
   <section class="section alt">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Stay In The Loop</div>
+        <h2>Get new checklists and guides as they publish</h2>
+        <p>No spam — just new readiness resources, occasionally.</p>
+      </div>
+      <div class="form" id="sub-form" style="max-width:480px;">
+        <input type="text" id="sub-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
+        <div style="display:flex; gap:0.7rem; flex-wrap:wrap;">
+          <input id="sub-email" type="email" placeholder="you@example.com" style="flex:1; min-width:220px;" />
+          <button class="btn" id="sub-go">Notify me</button>
+        </div>
+        <p class="note" id="sub-msg"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
     <div class="container">
       <div class="section-head">
         <div class="kicker">Go Deeper</div>
@@ -44,4 +62,16 @@ import Base from '../layouts/Base.astro';
       <a class="btn dark" href="/library">Explore the Library</a>
     </div>
   </section>
+
+  <script>
+    document.querySelector('#sub-go').addEventListener('click', async () => {
+      const email = document.querySelector('#sub-email').value.trim();
+      const hp = document.querySelector('#sub-hp').value;
+      const r = await fetch('/api/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'resources', website: hp }),
+      }).then(x => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+      document.querySelector('#sub-msg').textContent = r.ok ? "You're on the list." : (r.error || 'Something went wrong.');
+    });
+  </script>
 </Base>

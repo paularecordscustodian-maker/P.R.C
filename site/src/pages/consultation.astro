@@ -22,15 +22,55 @@ import Base from '../layouts/Base.astro';
             Prefer to start in writing? Fill out the <a href="/intake">client intake form</a> and we'll reach out.
           </p>
         </div>
-        <div class="wire-box" data-wire="scheduling-calcom">
-          <div class="big">Online scheduling coming soon</div>
-          <p>Our booking calendar is being connected. In the meantime, reach us directly:</p>
-          <p style="margin-top:0.8rem;">
-            <strong>Email:</strong> <span class="wire" data-wire="email-address">contact address coming soon</span><br/>
-          </p>
-          <p style="margin-top:0.8rem;"><a class="btn" href="/intake">Start with Client Intake</a></p>
+        <div>
+          <form class="form card" id="bk-form" onsubmit="return false;" style="padding:1.7rem;" data-wire="calcom-embed-optional">
+            <h3>Request a consultation</h3>
+            <input type="text" id="bk-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
+            <div><label for="bk-name">Name</label><input id="bk-name" type="text" placeholder="Your name" /></div>
+            <div><label for="bk-email">Email</label><input id="bk-email" type="email" placeholder="you@example.com" /></div>
+            <div><label for="bk-phone">Phone (optional)</label><input id="bk-phone" type="tel" placeholder="(555) 555-5555" /></div>
+            <div>
+              <label for="bk-topic">What's it about?</label>
+              <select id="bk-topic">
+                <option>Property / business transition</option>
+                <option>Business records health check</option>
+                <option>Life transition (family, caregiving, fresh start…)</option>
+                <option>Partnership / workshop</option>
+                <option>Something else</option>
+              </select>
+            </div>
+            <div><label for="bk-times">Days/times that work for you</label><input id="bk-times" type="text" placeholder="e.g. weekday mornings, or Tue/Thu after 5pm" /></div>
+            <button class="btn" id="bk-go">Request consultation</button>
+            <p class="note" id="bk-msg"></p>
+          </form>
+          <div class="wire-box" id="bk-done" style="display:none;">
+            <div class="big">Request received.</div>
+            <p>PRC will confirm a time by email — usually within one business day.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <script>
+    document.querySelector('#bk-go').addEventListener('click', async () => {
+      const v = (id) => document.querySelector('#' + id).value;
+      const btn = document.querySelector('#bk-go');
+      btn.disabled = true;
+      const r = await fetch('/api/booking', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: v('bk-name'), email: v('bk-email'), phone: v('bk-phone'),
+          topic: v('bk-topic'), pref_times: v('bk-times'), website: v('bk-hp'),
+        }),
+      }).then(x => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+      if (r.ok) {
+        document.querySelector('#bk-form').style.display = 'none';
+        document.querySelector('#bk-done').style.display = '';
+      } else {
+        document.querySelector('#bk-msg').textContent = r.error || 'Something went wrong.';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </Base>

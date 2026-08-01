@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import { checklists } from '../../data/checklists';
+
+export function getStaticPaths() {
+  return checklists.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+const { c } = Astro.props;
+---
+<Base
+  title={`${c.title} Checklist`}
+  kicker={`Category ${c.n} of 7`}
+  heading={c.title}
+  lede={c.intro}
+>
+  <section class="section">
+    <div class="container" style="max-width: 800px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:2rem;" class="no-print">
+        <a href="/checklists" style="text-decoration:none;">← All checklists</a>
+        <button class="btn dark" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+
+      {c.sections.map((s) => (
+        <div style="margin-bottom:2.2rem;">
+          <h2 style="margin-bottom:0.8rem;">{s.heading}</h2>
+          <ul class="list-plain checklist-print">
+            {s.items.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+
+      <div class="wire-box no-print" style="margin-top:2rem;">
+        <div class="big">Overwhelmed by the list?</div>
+        <p>That's what PRC is for. A Records Health Check turns this checklist into a done system.</p>
+        <p style="margin-top:1rem;"><a class="btn" href="/consultation">Book a Consultation</a></p>
+      </div>
+
+      <p class="no-print" style="margin-top:1.5rem; color: var(--mutetxt); font-size:0.9rem;">
+        Educational starting point, not a legal/tax/medical requirement — <a href="/service-boundaries">Service Boundaries</a>.
+      </p>
+    </div>
+  </section>
+
+  <style>
+    .checklist-print li::before { content: "☐" !important; font-size: 1.05em; }
+    @media print {
+      .no-print, .site-header, .site-footer, .cta-band, .page-hero::after { display: none !important; }
+      .page-hero { background: #fff !important; color: #000 !important; padding: 1rem 0 !important; }
+      .page-hero h1, .page-hero .lede, .page-hero .kicker { color: #000 !important; }
+      body { background: #fff; }
+    }
+  </style>
+</Base>

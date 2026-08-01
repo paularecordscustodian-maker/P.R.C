@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import { env, getCookie, verifySession } from '../lib/session';
+
+export const prerender = false;
+
+const { DB, SESSION_SECRET } = env(Astro.locals);
+const clientId = await verifySession(getCookie(Astro.request, 'prc_sess'), SESSION_SECRET);
+if (!clientId) return Astro.redirect('/login');
+
+const client = await DB.prepare('SELECT * FROM clients WHERE id = ? AND active = 1').bind(clientId).first();
+if (!client) return Astro.redirect('/login');
+
+const updates = (await DB.prepare(
+  'SELECT * FROM client_updates WHERE client_id = ? ORDER BY id DESC LIMIT 100'
+).bind(clientId).all()).results;
+
+const kindLabel: Record<string, string> = {
+  update: 'Update', deliverable: 'Deliverable', milestone: 'Milestone', request: 'Action needed',
+};
+---
+<Base
+  title="Client Portal"
+  kicker="Client Portal"
+  heading={`Welcome, ${client.name}`}
+  lede={client.org ? `${client.org} — your records readiness engagement, in one place.` : 'Your records readiness engagement, in one place.'}
+>
+  <section class="section">
+    <div class="container">
+      <div class="section-head" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; max-width:none;">
+        <div>
+          <div class="kicker">Engagement Feed</div>
+          <h2>Status, milestones &amp; deliverables</h2>
+        </div>
+        <a class="btn dark" href="/api/logout">Sign out</a>
+      </div>
+
+      {updates.length === 0 ? (
+        <div class="wire-box">
+          <div class="big">Your engagement is being set up</div>
+          <p>Updates, milestones, and deliverable notices from PRC will appear here.
+          Nothing yet — check back after your kickoff conversation.</p>
+        </div>
+      ) : (
+        <div class="cards" style="grid-template-columns: 1fr; max-width: 780px;">
+          {updates.map((u: any) => (
+            <div class="card">
+              <div class="num">{kindLabel[u.kind] || 'Update'} · {String(u.created_at).slice(0, 10)}</div>
+              <h3>{u.title}</h3>
+              {u.body && <p style="white-space: pre-wrap;">{u.body}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p style="margin-top:2rem; color: var(--mutetxt); font-size: 0.92rem; max-width: 70ch;">
+        Documents are exchanged through the secure channel agreed in your engagement — never through
+        this portal or public forms. Questions? Reply to your PRC contact directly, or
+        <a href="/consultation">request a follow-up consultation</a>.
+      </p>
+    </div>
+  </section>
+</Base>

@@ -5,22 +5,39 @@ import Base from '../layouts/Base.astro';
   title="Client Login"
   kicker="Client Login"
   heading="Client portal"
-  lede="Existing clients will access their records systems, trackers, and reports here."
+  lede="Sign in with the access code PRC gave you at onboarding."
 >
   <section class="section">
     <div class="container">
-      <div class="wire-box" data-wire="client-portal-auth" style="max-width: 560px;">
-        <div class="big">The secure client portal is under construction</div>
-        <p>
-          When it opens, clients will sign in here to view their document index, missing-record
-          reports, unresolved-item trackers, and monthly readiness reports — protected by
-          multifactor authentication and role-based access.
+      <div class="form" style="max-width: 440px;">
+        <div>
+          <label for="code">Access code</label>
+          <input id="code" type="text" placeholder="PRC-XXXXXX" autocomplete="off" autocapitalize="characters" />
+        </div>
+        <div>
+          <button class="btn" id="go">Sign in</button>
+          <p class="note" id="err" style="color:#b00020; margin-top:0.6rem;"></p>
+        </div>
+        <p class="note">
+          Don't have a code yet? Codes are issued when your engagement begins.
+          <a href="/consultation">Book a consultation</a> to get started, or
+          <a href="/intake">tell us about your records</a>.
         </p>
-        <p style="margin-top:1rem;">
-          Current clients receive deliverables directly and securely in the meantime.
-        </p>
-        <p style="margin-top:1rem;"><a class="btn" href="/consultation">Become a Client</a></p>
       </div>
     </div>
   </section>
+
+  <script>
+    const go = async () => {
+      const code = document.querySelector('#code').value.trim();
+      const r = await fetch('/api/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      }).then(x => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+      if (r.ok) location.href = '/portal';
+      else document.querySelector('#err').textContent = r.error || 'Sign-in failed.';
+    };
+    document.querySelector('#go').addEventListener('click', go);
+    document.querySelector('#code').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  </script>
 </Base>

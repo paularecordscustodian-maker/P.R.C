@@ -1,0 +1,159 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="PRC Admin"
+  kicker="Internal"
+  heading="Admin dashboard"
+  lede="Leads, bookings, subscribers, clients, and portal updates. Internal use only."
+>
+  <section class="section">
+    <div class="container">
+
+      <div id="gate" class="form" style="max-width:420px;">
+        <div>
+          <label for="tok">Admin token</label>
+          <input id="tok" type="password" placeholder="prc_admin_…" autocomplete="current-password" />
+        </div>
+        <div><button class="btn" id="tok-go">Unlock</button> <span id="tok-err" style="color:#b00020;"></span></div>
+      </div>
+
+      <div id="dash" style="display:none;">
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.6rem;" id="tabs">
+          <button class="btn dark tab" data-t="intakes">Intakes</button>
+          <button class="btn ghost tab" data-t="bookings" style="color:var(--ink); border-color:var(--line);">Bookings</button>
+          <button class="btn ghost tab" data-t="subscribers" style="color:var(--ink); border-color:var(--line);">Subscribers</button>
+          <button class="btn ghost tab" data-t="clients" style="color:var(--ink); border-color:var(--line);">Clients</button>
+          <button class="btn ghost tab" data-t="updates" style="color:var(--ink); border-color:var(--line);">Portal updates</button>
+        </div>
+
+        <div id="panel" style="overflow-x:auto;"></div>
+
+        <div class="cards" style="margin-top:2.5rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <div class="card">
+            <h3>Create client</h3>
+            <div class="form">
+              <input id="c-name" placeholder="Client name *" />
+              <input id="c-org" placeholder="Organization" />
+              <input id="c-email" placeholder="Email" />
+              <button class="btn" id="c-go">Create + generate access code</button>
+              <p class="note" id="c-out"></p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Post client update</h3>
+            <div class="form">
+              <select id="u-client"></select>
+              <select id="u-kind">
+                <option value="update">Update</option>
+                <option value="milestone">Milestone</option>
+                <option value="deliverable">Deliverable</option>
+                <option value="request">Action needed</option>
+              </select>
+              <input id="u-title" placeholder="Title *" />
+              <textarea id="u-body" rows="4" placeholder="Details (optional)"></textarea>
+              <button class="btn" id="u-go">Post to portal</button>
+              <p class="note" id="u-out"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    let DATA = null, TAB = 'intakes';
+
+    async function api(path, opts = {}) {
+      const r = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+      return r.json();
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    function statusSel(kind, row) {
+      const opts = ['new','contacted','scheduled','closed']
+        .map(s => `<option ${s===row.status?'selected':''}>${s}</option>`).join('');
+      return `<select data-status="${kind}:${row.id}">${opts}</select>`;
+    }
+
+    function render() {
+      const p = $('#panel');
+      const t = TAB, d = DATA;
+      const table = (heads, rows) =>
+        `<table class="plain"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+      if (t === 'intakes') p.innerHTML = table(
+        ['When','Name','Org','Email','Phone','Type','Situation','Status'],
+        d.intakes.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.type)}</td><td style="max-width:340px">${esc(r.situation)}</td><td>${statusSel('intake', r)}</td></tr>`).join('')
+      );
+      if (t === 'bookings') p.innerHTML = table(
+        ['When','Name','Email','Phone','Topic','Preferred times','Status'],
+        d.bookings.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.topic)}</td><td>${esc(r.pref_times)}</td><td>${statusSel('booking', r)}</td></tr>`).join('')
+      );
+      if (t === 'subscribers') p.innerHTML = table(
+        ['When','Email','Source'],
+        d.subscribers.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.email)}</td><td>${esc(r.source)}</td></tr>`).join('')
+      );
+      if (t === 'clients') p.innerHTML = table(
+        ['When','Name','Org','Email','Access code','Active',''],
+        d.clients.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td>${esc(r.email)}</td><td><code>${esc(r.access_code)}</code></td><td>${r.active ? 'yes' : 'no'}</td><td><button data-toggle="${r.id}:${r.active?0:1}">${r.active?'Deactivate':'Reactivate'}</button></td></tr>`).join('')
+      );
+      if (t === 'updates') p.innerHTML = table(
+        ['When','Client','Kind','Title','Body'],
+        d.updates.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.client_name)}</td><td>${esc(r.kind)}</td><td>${esc(r.title)}</td><td style="max-width:380px">${esc(r.body)}</td></tr>`).join('')
+      );
+      $('#u-client').innerHTML = d.clients.filter(c=>c.active).map(c => `<option value="${c.id}">${esc(c.name)}${c.org ? ' — '+esc(c.org) : ''}</option>`).join('');
+    }
+
+    async function load() {
+      const d = await api('/api/admin/data');
+      if (!d.ok) { $('#gate').style.display=''; $('#dash').style.display='none'; return false; }
+      DATA = d; $('#gate').style.display='none'; $('#dash').style.display=''; render(); return true;
+    }
+
+    $('#tok-go').addEventListener('click', async () => {
+      const r = await api('/api/admin/auth', { method:'POST', body: JSON.stringify({ token: $('#tok').value.trim() }) });
+      if (r.ok) load(); else $('#tok-err').textContent = r.error || 'Failed';
+    });
+
+    $('#tabs').addEventListener('click', (e) => {
+      const b = e.target.closest('.tab'); if (!b) return;
+      TAB = b.dataset.t;
+      document.querySelectorAll('.tab').forEach(x => { x.className = 'btn ghost tab'; x.style.cssText='color:var(--ink); border-color:var(--line);'; });
+      b.className = 'btn dark tab'; b.style.cssText='';
+      render();
+    });
+
+    $('#panel').addEventListener('change', async (e) => {
+      const sel = e.target.closest('select[data-status]'); if (!sel) return;
+      const [kind, id] = sel.dataset.status.split(':');
+      await api('/api/admin/status', { method:'POST', body: JSON.stringify({ kind, id, status: sel.value }) });
+    });
+
+    $('#panel').addEventListener('click', async (e) => {
+      const b = e.target.closest('button[data-toggle]'); if (!b) return;
+      const [id, active] = b.dataset.toggle.split(':');
+      await api('/api/admin/clients', { method:'POST', body: JSON.stringify({ action:'set_active', id, active: Number(active) }) });
+      load();
+    });
+
+    $('#c-go').addEventListener('click', async () => {
+      const r = await api('/api/admin/clients', { method:'POST', body: JSON.stringify({
+        name: $('#c-name').value, org: $('#c-org').value, email: $('#c-email').value }) });
+      $('#c-out').textContent = r.ok ? `Created. Access code: ${r.access_code} — give this to the client for /login.` : (r.error || 'Failed');
+      if (r.ok) { $('#c-name').value = $('#c-org').value = $('#c-email').value = ''; load(); }
+    });
+
+    $('#u-go').addEventListener('click', async () => {
+      const r = await api('/api/admin/updates', { method:'POST', body: JSON.stringify({
+        client_id: $('#u-client').value, kind: $('#u-kind').value,
+        title: $('#u-title').value, body: $('#u-body').value }) });
+      $('#u-out').textContent = r.ok ? 'Posted — visible in the client portal now.' : (r.error || 'Failed');
+      if (r.ok) { $('#u-title').value = $('#u-body').value = ''; load(); }
+    });
+
+    load();
+  </script>
+</Base>
