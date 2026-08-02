@@ -58,3 +58,15 @@ CREATE TABLE IF NOT EXISTS library_members (
   active INTEGER NOT NULL DEFAULT 1,
   expires_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  address TEXT,
+  items TEXT NOT NULL,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'new'
+);

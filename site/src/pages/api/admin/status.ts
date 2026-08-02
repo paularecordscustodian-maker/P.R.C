@@ -3,8 +3,8 @@ import { env, json, isAdmin, clean } from '../../../lib/session';
 
 export const prerender = false;
 
-const TABLES: Record<string, string> = { intake: 'intakes', booking: 'bookings' };
-const STATUSES = new Set(['new', 'contacted', 'scheduled', 'closed']);
+const TABLES: Record<string, string> = { intake: 'intakes', booking: 'bookings', order: 'orders' };
+const STATUSES = new Set(['new', 'contacted', 'scheduled', 'invoiced', 'paid', 'shipped', 'closed']);
 
 export const POST: APIRoute = async ({ request, locals }) => {
   if (!isAdmin(request, locals)) return json({ ok: false, error: 'Unauthorized' }, 401);

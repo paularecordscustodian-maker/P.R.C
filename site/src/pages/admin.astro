@@ -26,6 +26,7 @@ import Base from '../layouts/Base.astro';
           <button class="btn ghost tab" data-t="clients" style="color:var(--ink); border-color:var(--line);">Clients</button>
           <button class="btn ghost tab" data-t="updates" style="color:var(--ink); border-color:var(--line);">Portal updates</button>
           <button class="btn ghost tab" data-t="members" style="color:var(--ink); border-color:var(--line);">Library members</button>
+          <button class="btn ghost tab" data-t="orders" style="color:var(--ink); border-color:var(--line);">Orders</button>
         </div>
 
         <div id="panel" style="overflow-x:auto;"></div>
@@ -89,9 +90,19 @@ import Base from '../layouts/Base.astro';
     function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
 
     function statusSel(kind, row) {
-      const opts = ['new','contacted','scheduled','closed']
-        .map(s => `<option ${s===row.status?'selected':''}>${s}</option>`).join('');
+      const flow = kind === 'order' ? ['new','invoiced','paid','shipped','closed'] : ['new','contacted','scheduled','closed'];
+      const opts = flow.map(s => `<option ${s===row.status?'selected':''}>${s}</option>`).join('');
       return `<select data-status="${kind}:${row.id}">${opts}</select>`;
+    }
+
+    function itemsLabel(itemsJson) {
+      try {
+        const items = JSON.parse(itemsJson);
+        const total = items.reduce((s, i) => s + (i.price ? i.price * i.qty : 0), 0);
+        const quoted = items.some(i => i.price === null);
+        return items.map(i => `${i.qty}× ${i.name}`).join('<br>') +
+          `<br><strong>$${total.toFixed(2)}${quoted ? ' + quoted items' : ''}</strong>`;
+      } catch { return ''; }
     }
 
     function render() {
@@ -118,6 +129,10 @@ import Base from '../layouts/Base.astro';
       if (t === 'members') p.innerHTML = table(
         ['When','Name','Email','Member code','Expires','Active',''],
         d.members.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td><code>${esc(r.access_code)}</code></td><td>${esc(r.expires_at || 'never')}</td><td>${r.active ? 'yes' : 'no'}</td><td><button data-mtoggle="${r.id}:${r.active?0:1}">${r.active?'Deactivate':'Reactivate'}</button></td></tr>`).join('')
+      );
+      if (t === 'orders') p.innerHTML = table(
+        ['When','Name','Email','Phone','Ship to','Items','Notes','Status'],
+        d.orders.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td style="max-width:200px">${esc(r.address)}</td><td>${itemsLabel(r.items)}</td><td style="max-width:200px">${esc(r.notes)}</td><td>${statusSel('order', r)}</td></tr>`).join('')
       );
       if (t === 'updates') p.innerHTML = table(
         ['When','Client','Kind','Title','Body'],

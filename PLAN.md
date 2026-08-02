@@ -72,6 +72,10 @@ journey with zero monthly cost.
 - **Sell a Library membership**: /admin → "Add library member" (name, email, expiration:
   never / 1 month / 1 year) → give them the `LIB-` code. They enter it at `/library` and get
   all member guides. Deactivate or let expire to end access.
+- **Fulfill a product order**: /admin → Orders tab. New orders arrive with items, subtotal,
+  and shipping address. Reply by email with the confirmed total + payment options, then walk
+  the status: new → invoiced → paid → shipped. For a gift Library membership, create the
+  member (1-year) and email the code. Prices are edited in `site/src/data/products.ts`.
 - **Turn on self-serve Library checkout**: create a payment link (Stripe Payment Link,
   Polar, or similar merchant account) and set the Pages env var `LIBRARY_CHECKOUT_URL` to it —
   the `/library` join card switches from "arranged directly" to a Subscribe button

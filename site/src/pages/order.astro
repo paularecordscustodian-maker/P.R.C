@@ -1,0 +1,118 @@
+---
+import Base from '../layouts/Base.astro';
+import { products } from '../data/products';
+---
+<Base
+  title="Place an Order"
+  kicker="Products"
+  heading="Place an order"
+  lede="Pick your items and send the order — PRC confirms your total, payment method, and delivery by email before anything is charged."
+>
+  <section class="section">
+    <div class="container">
+      <div class="rb-grid">
+        <form class="form" id="of" onsubmit="return false;">
+          <input type="text" id="o-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
+          <div>
+            <label>Items</label>
+            <div class="order-items">
+              {products.map((p) => (
+                <div class="order-row" data-slug={p.slug} data-price={p.price ?? ''}>
+                  <div class="oi-info">
+                    <strong>{p.name}</strong>
+                    <span class="oi-price">{p.price !== null ? `$${p.price.toFixed(2)}` : p.priceNote}</span>
+                  </div>
+                  <input type="number" min="0" max="50" value="0" class="oi-qty" aria-label={`Quantity: ${p.name}`} />
+                </div>
+              ))}
+            </div>
+            <p class="note" style="margin-top:0.5rem;">Subtotal: <strong id="o-subtotal">$0.00</strong> <span id="o-quote-note"></span></p>
+          </div>
+          <div class="row">
+            <div><label for="o-name">Your name</label><input id="o-name" /></div>
+            <div><label for="o-email">Email</label><input id="o-email" type="email" /></div>
+          </div>
+          <div class="row">
+            <div><label for="o-phone">Phone (optional)</label><input id="o-phone" type="tel" /></div>
+            <div><label for="o-address">Shipping address <span style="font-weight:400;">(required for physical items)</span></label><input id="o-address" placeholder="Street, City, ST 00000" /></div>
+          </div>
+          <div><label for="o-notes">Notes (optional)</label><textarea id="o-notes" rows="3" placeholder="Gift note, workshop details, questions…"></textarea></div>
+          <div>
+            <button class="btn" id="o-go">Send order</button>
+            <p class="note" id="o-msg" style="margin-top:0.6rem;"></p>
+          </div>
+        </form>
+
+        <div>
+          <div class="card">
+            <h3>How ordering works</h3>
+            <ul class="list-check">
+              <li>You send the order — nothing is charged online.</li>
+              <li>PRC replies by email with your total (including shipping) and payment options.</li>
+              <li>Physical items ship after payment; gift memberships arrive as a member code.</li>
+              <li>Workshops get a scoped quote for your group.</li>
+            </ul>
+          </div>
+          <div class="wire-box" id="o-done" style="display:none; margin-top:1.3rem;">
+            <div class="big">Order received — thank you.</div>
+            <p>PRC will email your confirmed total and payment options, usually within one business day.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .rb-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2.5rem; align-items: start; }
+    @media (max-width: 960px) { .rb-grid { grid-template-columns: 1fr; } }
+    .order-items { display: grid; gap: 0.6rem; }
+    .order-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem;
+    }
+    .oi-info { display: flex; flex-direction: column; gap: 0.15rem; }
+    .oi-info strong { font-size: 0.95rem; color: var(--ink); }
+    .oi-price { color: var(--gold-dark); font-size: 0.9rem; font-weight: 600; }
+    .oi-qty { width: 74px; padding: 0.5rem; border: 1px solid var(--line); border-radius: 8px; font-size: 1rem; text-align: center; }
+  </style>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const rows = [...document.querySelectorAll('.order-row')];
+
+    // preselect from ?p=slug
+    const pre = new URLSearchParams(location.search).get('p');
+    if (pre) { const r = rows.find((x) => x.dataset.slug === pre); if (r) r.querySelector('.oi-qty').value = 1; }
+
+    function subtotal() {
+      let sum = 0, quoted = false;
+      for (const r of rows) {
+        const qty = parseInt(r.querySelector('.oi-qty').value, 10) || 0;
+        if (!qty) continue;
+        if (r.dataset.price === '') quoted = true;
+        else sum += qty * parseFloat(r.dataset.price);
+      }
+      $('#o-subtotal').textContent = '$' + sum.toFixed(2);
+      $('#o-quote-note').textContent = quoted ? '+ quoted items · shipping added at confirmation' : '· shipping added at confirmation';
+    }
+    rows.forEach((r) => r.querySelector('.oi-qty').addEventListener('input', subtotal));
+    subtotal();
+
+    $('#o-go').addEventListener('click', async () => {
+      const items = rows
+        .map((r) => ({ slug: r.dataset.slug, qty: parseInt(r.querySelector('.oi-qty').value, 10) || 0 }))
+        .filter((i) => i.qty > 0);
+      const btn = $('#o-go');
+      btn.disabled = true;
+      const r = await fetch('/api/order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items, name: $('#o-name').value, email: $('#o-email').value, phone: $('#o-phone').value,
+          address: $('#o-address').value, notes: $('#o-notes').value, website: $('#o-hp').value,
+        }),
+      }).then((x) => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+      if (r.ok) { $('#of').style.display = 'none'; $('#o-done').style.display = ''; }
+      else { $('#o-msg').textContent = r.error || 'Something went wrong.'; btn.disabled = false; }
+    });
+  </script>
+</Base>
