@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { guides } from '../../data/guides';
+---
+<Base
+  title="Free Life Event Guides"
+  kicker="Free Guides"
+  heading="Life event starter guides"
+  lede="Free starter editions of every PRC guide — the first steps of each situation, printable and ready to use. Full editions live in the Records Readiness Library."
+>
+  <section class="section">
+    <div class="container">
+      <div class="cards">
+        {guides.map((g) => (
+          <div class="card">
+            <div class="num">{g.audience} · free starter edition</div>
+            <h3>{g.title}</h3>
+            <p>{g.intro.slice(0, 140)}…</p>
+            <a class="more" href={`/guides/${g.slug}`}>Read the starter guide →</a>
+          </div>
+        ))}
+      </div>
+      <p style="margin-top:2rem; color: var(--mutetxt); max-width:70ch;">
+        Every starter edition is free to read, print, or save as a PDF. Members get the complete
+        guides — <a href="/library">see the Library</a>.
+      </p>
+    </div>
+  </section>
+</Base>

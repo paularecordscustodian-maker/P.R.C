@@ -1,0 +1,69 @@
+---
+import Base from '../../layouts/Base.astro';
+import { guides } from '../../data/guides';
+
+export function getStaticPaths() {
+  return guides.map((g) => ({ params: { slug: g.slug }, props: { g } }));
+}
+const { g } = Astro.props;
+const FREE = 2;
+const free = g.sections.slice(0, FREE);
+const locked = g.sections.slice(FREE);
+---
+<Base
+  title={`${g.title} — Starter Edition`}
+  kicker={`Free Starter Edition · ${g.audience}`}
+  heading={g.title}
+  lede={g.intro}
+>
+  <section class="section">
+    <div class="container" style="max-width: 800px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:2rem;" class="no-print">
+        <a href="/guides" style="text-decoration:none;">← All free guides</a>
+        <button class="btn dark" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+
+      {free.map((s) => (
+        <div style="margin-bottom:2.4rem;">
+          <h2 style="margin-bottom:0.7rem;">{s.heading}</h2>
+          {s.body && <p style="color:var(--body); margin-bottom:0.7rem;">{s.body}</p>}
+          {s.items && (
+            <ul class="list-check">
+              {s.items.map((item) => <li>{item}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+
+      {locked.length > 0 && (
+        <div class="wire-box no-print" style="text-align:left;">
+          <div class="big">In the full guide ({locked.length} more sections)</div>
+          <ul class="list-plain" style="margin-top:0.6rem;">
+            {locked.map((s) => <li>🔒 {s.heading}</li>)}
+          </ul>
+          <p style="margin-top:1.2rem;">
+            The complete edition — every section, updated as it improves — is in the
+            Records Readiness Library.
+          </p>
+          <p style="margin-top:1rem;">
+            <a class="btn" href="/library#join">Join the Library</a>
+            &nbsp;<a class="btn dark" href="/library">Member sign-in</a>
+          </p>
+        </div>
+      )}
+
+      <p class="no-print" style="margin-top:1.5rem; color: var(--mutetxt); font-size:0.9rem;">
+        Educational content, not legal/tax/medical advice — <a href="/service-boundaries">Service Boundaries</a>.
+      </p>
+    </div>
+  </section>
+
+  <style>
+    @media print {
+      .no-print, .site-header, .site-footer, .cta-band, .page-hero::after { display: none !important; }
+      .page-hero { background: #fff !important; padding: 1rem 0 !important; }
+      .page-hero h1, .page-hero .lede, .page-hero .kicker { color: #000 !important; }
+      body { background: #fff; }
+    }
+  </style>
+</Base>
