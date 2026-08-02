@@ -1,0 +1,176 @@
+---
+import Base from '../layouts/Base.astro';
+import { requestTypes } from '../data/requests';
+---
+<Base
+  title="Records Request Builder"
+  kicker="Records Request Center"
+  heading="Build a records request letter"
+  lede="Pick who you're asking, check the records you need, and get a ready-to-send letter. Nothing you type leaves your browser."
+>
+  <section class="section">
+    <div class="container">
+      <div class="rb-grid">
+        <form class="form" id="rb" onsubmit="return false;">
+          <div>
+            <label for="r-type">Who are you requesting records from?</label>
+            <select id="r-type">
+              {requestTypes.map((t, i) => <option value={t.slug} selected={i === 0}>{t.label}</option>)}
+            </select>
+            <p class="note" id="r-note" style="margin-top:0.4rem;"></p>
+          </div>
+
+          <div class="row">
+            <div><label for="r-name">Your full name</label><input id="r-name" placeholder="Jane Q. Public" /></div>
+            <div><label for="r-phone">Your phone</label><input id="r-phone" placeholder="(555) 555-5555" /></div>
+          </div>
+          <div class="row">
+            <div><label for="r-email">Your email</label><input id="r-email" placeholder="you@example.com" /></div>
+            <div><label for="r-addr">Your mailing address</label><input id="r-addr" placeholder="123 Main St, City, ST 00000" /></div>
+          </div>
+
+          <div class="row">
+            <div><label for="r-org">Recipient organization</label><input id="r-org" placeholder="Organization name" /></div>
+            <div><label for="r-dept">Recipient / department</label><input id="r-dept" /></div>
+          </div>
+          <div><label for="r-orgaddr">Recipient address (if mailing)</label><input id="r-orgaddr" placeholder="Street, City, ST 00000 — optional" /></div>
+
+          <div><label for="r-id" id="r-id-label">Reference</label><input id="r-id" /></div>
+          <div><label for="r-range">Time period</label><input id="r-range" placeholder="e.g. January 2022 to present" /></div>
+
+          <div>
+            <label>Records to request</label>
+            <div id="r-records" class="rb-checks"></div>
+          </div>
+          <div><label for="r-extra">Anything else to request (optional)</label><input id="r-extra" placeholder="e.g. copy of my signed authorization on file" /></div>
+
+          <div>
+            <label for="r-delivery">How should they deliver copies?</label>
+            <select id="r-delivery">
+              <option value="by email to the address above">By email</option>
+              <option value="by mail to the address above">By mail</option>
+              <option value="for pickup; please contact me when they are ready">For pickup</option>
+            </select>
+          </div>
+        </form>
+
+        <div>
+          <div class="rb-actions no-print">
+            <button class="btn" id="rb-copy">Copy letter</button>
+            <button class="btn dark" onclick="window.print()">Print / Save as PDF</button>
+            <button class="btn ghost" id="rb-download" style="color:var(--ink); border-color:var(--line);">Download .txt</button>
+            <span class="note" id="rb-msg"></span>
+          </div>
+          <pre id="letter" class="rb-letter"></pre>
+          <p class="note no-print" style="margin-top:1rem;">
+            Educational template — organizations set their own procedures, forms, fees, and ID
+            requirements. Don't include your SSN or full account numbers.
+            See <a href="/service-boundaries">Service Boundaries</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .rb-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 2.5rem; align-items: start; }
+    @media (max-width: 960px) { .rb-grid { grid-template-columns: 1fr; } }
+    .rb-checks { display: grid; gap: 0.35rem; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; }
+    .rb-checks label { display: flex; gap: 0.55rem; align-items: baseline; font-weight: 400; font-size: 0.95rem; margin: 0; color: var(--body); }
+    .rb-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    .rb-letter {
+      background: var(--white); border: 1px solid var(--line); border-radius: 12px;
+      padding: 2.2rem; font-family: Georgia, 'Times New Roman', serif; font-size: 0.95rem;
+      line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; color: #222;
+      box-shadow: 0 14px 40px rgba(10,15,30,0.08); min-height: 480px;
+    }
+    @media print {
+      .no-print, .site-header, .site-footer, .cta-band, .page-hero, .rb-grid > form, .form { display: none !important; }
+      .rb-grid { grid-template-columns: 1fr; }
+      .rb-letter { border: none; box-shadow: none; padding: 0; min-height: 0; font-size: 12pt; }
+      body { background: #fff; }
+    }
+  </style>
+
+  <script>
+    import { requestTypes } from '../data/requests';
+
+    const $ = (s) => document.querySelector(s);
+    const byType = Object.fromEntries(requestTypes.map((t) => [t.slug, t]));
+
+    function currentType() { return byType[$('#r-type').value]; }
+
+    function renderChecks() {
+      const t = currentType();
+      $('#r-records').innerHTML = t.records
+        .map((r, i) => `<label><input type="checkbox" data-rec value="${r.replace(/"/g, '&quot;')}" ${i < 2 ? 'checked' : ''}/> ${r}</label>`)
+        .join('');
+      $('#r-id-label').textContent = t.idLabel;
+      $('#r-id').placeholder = t.idHint;
+      $('#r-note').textContent = t.note || '';
+    }
+
+    function v(id) { return $('#' + id).value.trim(); }
+
+    function buildLetter() {
+      const t = currentType();
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const name = v('r-name') || '[Your name]';
+      const checked = [...document.querySelectorAll('[data-rec]:checked')].map((c) => c.value);
+      if (v('r-extra')) checked.push(v('r-extra'));
+
+      const fromBlock = [name, v('r-addr'), [v('r-email'), v('r-phone')].filter(Boolean).join(' · ')]
+        .filter(Boolean).join('\n');
+      const toBlock = [v('r-dept') || t.recipientHint, v('r-org') || '[Organization]', v('r-orgaddr')]
+        .filter(Boolean).join('\n');
+
+      const lines = [
+        fromBlock, '', today, '', toBlock, '',
+        `RE: ${t.subject}`, '',
+        `Dear ${v('r-dept') || 'Records Custodian'}:`, '',
+        `I am writing to request copies of the following records ${t.relationship}:`, '',
+        ...checked.map((c) => `  •  ${c}`),
+        '',
+      ];
+      if (v('r-range')) lines.push(`Time period: ${v('r-range')}.`, '');
+      if (v('r-id')) lines.push(`Reference: ${v('r-id')}.`, '');
+      lines.push(`Please provide the copies ${$('#r-delivery').value}.`, '');
+      if (t.extraParagraph) lines.push(t.extraParagraph, '');
+      lines.push(
+        'If any fee applies, or if additional identification or a signed form is needed, please contact me at the information above before processing.',
+        '',
+        'If any of these records are unavailable or no longer retained, please let me know which ones and, where applicable, who holds them now.',
+        '',
+        'Thank you for your time.',
+        '',
+        'Sincerely,',
+        '', '',
+        name,
+      );
+      $('#letter').textContent = lines.join('\n');
+    }
+
+    $('#r-type').addEventListener('change', () => { renderChecks(); buildLetter(); });
+    document.querySelector('#rb').addEventListener('input', buildLetter);
+    $('#r-records').addEventListener('change', buildLetter);
+    $('#r-delivery').addEventListener('change', buildLetter);
+
+    $('#rb-copy').addEventListener('click', async () => {
+      await navigator.clipboard.writeText($('#letter').textContent);
+      $('#rb-msg').textContent = 'Copied.';
+      setTimeout(() => ($('#rb-msg').textContent = ''), 2000);
+    });
+
+    $('#rb-download').addEventListener('click', () => {
+      const blob = new Blob([$('#letter').textContent], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'records-request.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderChecks();
+    buildLetter();
+  </script>
+</Base>
