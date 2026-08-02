@@ -48,3 +48,13 @@ CREATE TABLE IF NOT EXISTS client_updates (
 );
 
 CREATE INDEX IF NOT EXISTS idx_updates_client ON client_updates(client_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS library_members (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  name TEXT,
+  email TEXT,
+  access_code TEXT NOT NULL UNIQUE,
+  active INTEGER NOT NULL DEFAULT 1,
+  expires_at TEXT
+);

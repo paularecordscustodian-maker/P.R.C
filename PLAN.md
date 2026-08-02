@@ -69,5 +69,13 @@ journey with zero monthly cost.
   They log in at `/login` and see `/portal`.
 - **Post an update**: /admin → "Post client update" (pick client, title, body). It appears
   in their portal immediately.
+- **Sell a Library membership**: /admin → "Add library member" (name, email, expiration:
+  never / 1 month / 1 year) → give them the `LIB-` code. They enter it at `/library` and get
+  all member guides. Deactivate or let expire to end access.
+- **Turn on self-serve Library checkout**: create a payment link (Stripe Payment Link,
+  Polar, or similar merchant account) and set the Pages env var `LIBRARY_CHECKOUT_URL` to it —
+  the `/library` join card switches from "arranged directly" to a Subscribe button
+  automatically. Issue the member code when the payment notification arrives (or wire the
+  provider's webhook to `library_members` later).
 - **Change admin token / session secret**: Cloudflare dashboard → Pages → prc-site →
   Settings → Environment variables.

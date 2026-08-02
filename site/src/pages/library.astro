@@ -1,47 +1,96 @@
 ---
 import Base from '../layouts/Base.astro';
+import { guides } from '../data/guides';
+import { env, getCookie, verifyScoped } from '../lib/session';
+
+export const prerender = false;
+
+const { DB, SESSION_SECRET, LIBRARY_CHECKOUT_URL } = env(Astro.locals);
+const memberId = await verifyScoped('lib', getCookie(Astro.request, 'prc_lib'), SESSION_SECRET);
+let member: any = null;
+if (memberId) {
+  member = await DB.prepare(
+    "SELECT * FROM library_members WHERE id = ? AND active = 1 AND (expires_at IS NULL OR expires_at > datetime('now'))"
+  ).bind(memberId).first();
+}
+const checkout = LIBRARY_CHECKOUT_URL || '';
 ---
 <Base
   title="Records Readiness Library"
   kicker="Records Readiness Library"
-  heading="Every guide, template, and letter in one place"
-  lede="A growing library organized by record category, life event, industry, and audience."
+  heading={member ? 'Your library' : 'The Records Readiness Library'}
+  lede={member
+    ? 'Full member access. New guides are added as they publish.'
+    : 'In-depth guides that turn the free checklists into finished systems — a membership for people who want it done right.'}
 >
   <section class="section">
     <div class="container">
       <div class="section-head">
-        <div class="kicker">Browse By</div>
-        <h2>Four ways in</h2>
+        <div class="kicker">{member ? 'Member Guides' : 'What Members Get'}</div>
+        <h2>Guides in the library</h2>
+        {!member && <p>Every guide goes deep on one situation — the sequence, the records, the mistakes that cost people money. Free previews: the <a href="/checklists">seven category checklists</a>.</p>}
       </div>
       <div class="cards">
-        <div class="card">
-          <h3>By Record Category</h3>
-          <p>Identity · Health &amp; Care · Financial · Housing &amp; Property · Employment &amp; Education · Legal &amp; Important Documents · Personal &amp; Family.</p>
-        </div>
-        <div class="card">
-          <h3>By Life Event</h3>
-          <p>First apartment · first job · new parent · caregiving · retirement · reentry · estate and loss · military and workforce transitions.</p>
-        </div>
-        <div class="card">
-          <h3>By Industry</h3>
-          <p>Property management · construction · trucking · care services · churches and nonprofits · small business · government contracting.</p>
-        </div>
-        <div class="card">
-          <h3>By Audience</h3>
-          <p>Children and teens · young adults · families · seniors · business owners · community organizations.</p>
-        </div>
+        {guides.map((g) => (
+          <div class="card">
+            <div class="num">{g.audience} · {g.minutes} min read</div>
+            <h3>{g.title}</h3>
+            <p>{g.intro.slice(0, 140)}…</p>
+            {member
+              ? <a class="more" href={`/library/${g.slug}`}>Read the guide →</a>
+              : <span class="wire">🔒 Members only</span>}
+          </div>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="section alt">
-    <div class="container">
-      <div class="wire-box" data-wire="library-subscription">
-        <div class="big">Library access is being prepared</div>
-        <p>E-books, checklists, worksheets, request-letter templates, and courses are being assembled now.
-        A subscription option is planned. Check back soon, or book a consultation to get materials directly.</p>
-        <p style="margin-top:1rem;"><a class="btn" href="/consultation">Book a Consultation</a></p>
+  {!member && (
+    <section class="section alt" id="join">
+      <div class="container">
+        <div class="cards" style="grid-template-columns: 1fr 1fr; align-items: start;">
+          <div class="card">
+            <h3>Become a member</h3>
+            <p>
+              Membership includes every guide, all future guides, and member pricing on
+              PRC services. Memberships are issued personally by PRC.
+            </p>
+            {checkout ? (
+              <a class="btn" href={checkout}>Subscribe to the Library</a>
+            ) : (
+              <>
+                <p><span class="wire" data-wire="library-checkout-url">Online checkout is being connected.</span></p>
+                <p>Until then, membership is arranged directly — <a href="/consultation">request a consultation</a> or
+                mention the Library in your <a href="/intake">intake</a>, and PRC will set you up with a member code.</p>
+              </>
+            )}
+          </div>
+          <div class="card">
+            <h3>Already have a member code?</h3>
+            <div class="form">
+              <input id="lib-code" placeholder="LIB-XXXXXX" autocapitalize="characters" autocomplete="off" />
+              <button class="btn dark" id="lib-go">Enter the library</button>
+              <p class="note" id="lib-err" style="color:#b00020;"></p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
+
+  {!member && (
+    <script>
+      const go = async () => {
+        const code = document.querySelector('#lib-code').value.trim();
+        const r = await fetch('/api/library/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        }).then((x) => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+        if (r.ok) location.reload();
+        else document.querySelector('#lib-err').textContent = r.error || 'Sign-in failed.';
+      };
+      document.querySelector('#lib-go').addEventListener('click', go);
+      document.querySelector('#lib-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    </script>
+  )}
 </Base>

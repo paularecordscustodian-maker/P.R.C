@@ -9,26 +9,32 @@ function b64url(buf: ArrayBuffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export async function signSession(clientId: number, secret: string, ttlSeconds = 60 * 60 * 24 * 30) {
+// Scoped tokens: payload "<scope>:<id>.<exp>" — a client-portal session can never
+// be replayed as a library session and vice versa.
+export async function signScoped(scope: string, id: number, secret: string, ttlSeconds = 60 * 60 * 24 * 30) {
   const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const payload = `${clientId}.${exp}`;
+  const payload = `${scope}:${id}.${exp}`;
   const key = await hmacKey(secret);
   const sig = b64url(await crypto.subtle.sign('HMAC', key, enc.encode(payload)));
   return `${payload}.${sig}`;
 }
 
-export async function verifySession(token: string | undefined, secret: string): Promise<number | null> {
+export async function verifyScoped(scope: string, token: string | undefined, secret: string): Promise<number | null> {
   if (!token) return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
-  const [id, exp, sig] = parts;
-  if (!/^\d+$/.test(id) || !/^\d+$/.test(exp)) return null;
-  if (parseInt(exp, 10) < Math.floor(Date.now() / 1000)) return null;
+  const [subject, exp, sig] = parts;
+  if (!/^\d+$/.test(exp) || parseInt(exp, 10) < Math.floor(Date.now() / 1000)) return null;
+  const m = subject.match(/^([a-z]+):(\d+)$/);
+  if (!m || m[1] !== scope) return null;
   const key = await hmacKey(secret);
-  const expected = b64url(await crypto.subtle.sign('HMAC', key, enc.encode(`${id}.${exp}`)));
+  const expected = b64url(await crypto.subtle.sign('HMAC', key, enc.encode(`${subject}.${exp}`)));
   if (expected !== sig) return null;
-  return parseInt(id, 10);
+  return parseInt(m[2], 10);
 }
+
+export const signSession = (clientId: number, secret: string, ttl = 60 * 60 * 24 * 30) => signScoped('client', clientId, secret, ttl);
+export const verifySession = (token: string | undefined, secret: string) => verifyScoped('client', token, secret);
 
 export function getCookie(request: Request, name: string): string | undefined {
   const raw = request.headers.get('cookie') || '';
@@ -47,7 +53,7 @@ export function json(data: unknown, status = 200, headers: Record<string, string
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
 
-type RuntimeEnv = { DB: any; ADMIN_TOKEN: string; SESSION_SECRET: string };
+type RuntimeEnv = { DB: any; ADMIN_TOKEN: string; SESSION_SECRET: string; LIBRARY_CHECKOUT_URL?: string };
 export function env(locals: any): RuntimeEnv {
   return (locals as any).runtime.env as RuntimeEnv;
 }

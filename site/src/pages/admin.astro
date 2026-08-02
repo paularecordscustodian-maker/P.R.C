@@ -25,6 +25,7 @@ import Base from '../layouts/Base.astro';
           <button class="btn ghost tab" data-t="subscribers" style="color:var(--ink); border-color:var(--line);">Subscribers</button>
           <button class="btn ghost tab" data-t="clients" style="color:var(--ink); border-color:var(--line);">Clients</button>
           <button class="btn ghost tab" data-t="updates" style="color:var(--ink); border-color:var(--line);">Portal updates</button>
+          <button class="btn ghost tab" data-t="members" style="color:var(--ink); border-color:var(--line);">Library members</button>
         </div>
 
         <div id="panel" style="overflow-x:auto;"></div>
@@ -38,6 +39,20 @@ import Base from '../layouts/Base.astro';
               <input id="c-email" placeholder="Email" />
               <button class="btn" id="c-go">Create + generate access code</button>
               <p class="note" id="c-out"></p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Add library member</h3>
+            <div class="form">
+              <input id="m-name" placeholder="Member name" />
+              <input id="m-email" placeholder="Email" />
+              <select id="m-expires">
+                <option value="">No expiration (until deactivated)</option>
+                <option value="1m">Expires in 1 month</option>
+                <option value="1y">Expires in 1 year</option>
+              </select>
+              <button class="btn" id="m-go">Create + generate member code</button>
+              <p class="note" id="m-out"></p>
             </div>
           </div>
           <div class="card">
@@ -100,6 +115,10 @@ import Base from '../layouts/Base.astro';
         ['When','Name','Org','Email','Access code','Active',''],
         d.clients.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td>${esc(r.email)}</td><td><code>${esc(r.access_code)}</code></td><td>${r.active ? 'yes' : 'no'}</td><td><button data-toggle="${r.id}:${r.active?0:1}">${r.active?'Deactivate':'Reactivate'}</button></td></tr>`).join('')
       );
+      if (t === 'members') p.innerHTML = table(
+        ['When','Name','Email','Member code','Expires','Active',''],
+        d.members.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td><code>${esc(r.access_code)}</code></td><td>${esc(r.expires_at || 'never')}</td><td>${r.active ? 'yes' : 'no'}</td><td><button data-mtoggle="${r.id}:${r.active?0:1}">${r.active?'Deactivate':'Reactivate'}</button></td></tr>`).join('')
+      );
       if (t === 'updates') p.innerHTML = table(
         ['When','Client','Kind','Title','Body'],
         d.updates.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.client_name)}</td><td>${esc(r.kind)}</td><td>${esc(r.title)}</td><td style="max-width:380px">${esc(r.body)}</td></tr>`).join('')
@@ -133,10 +152,25 @@ import Base from '../layouts/Base.astro';
     });
 
     $('#panel').addEventListener('click', async (e) => {
-      const b = e.target.closest('button[data-toggle]'); if (!b) return;
-      const [id, active] = b.dataset.toggle.split(':');
-      await api('/api/admin/clients', { method:'POST', body: JSON.stringify({ action:'set_active', id, active: Number(active) }) });
-      load();
+      const b = e.target.closest('button[data-toggle]');
+      if (b) {
+        const [id, active] = b.dataset.toggle.split(':');
+        await api('/api/admin/clients', { method:'POST', body: JSON.stringify({ action:'set_active', id, active: Number(active) }) });
+        return load();
+      }
+      const m = e.target.closest('button[data-mtoggle]');
+      if (m) {
+        const [id, active] = m.dataset.mtoggle.split(':');
+        await api('/api/admin/members', { method:'POST', body: JSON.stringify({ action:'set_active', id, active: Number(active) }) });
+        return load();
+      }
+    });
+
+    $('#m-go').addEventListener('click', async () => {
+      const r = await api('/api/admin/members', { method:'POST', body: JSON.stringify({
+        name: $('#m-name').value, email: $('#m-email').value, expires: $('#m-expires').value }) });
+      $('#m-out').textContent = r.ok ? `Created. Member code: ${r.access_code} — they enter it at /library.` : (r.error || 'Failed');
+      if (r.ok) { $('#m-name').value = $('#m-email').value = ''; load(); }
     });
 
     $('#c-go').addEventListener('click', async () => {

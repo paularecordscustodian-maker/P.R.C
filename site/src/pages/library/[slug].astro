@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import { guides } from '../../data/guides';
+import { env, getCookie, verifyScoped } from '../../lib/session';
+
+export const prerender = false;
+
+const { DB, SESSION_SECRET } = env(Astro.locals);
+const memberId = await verifyScoped('lib', getCookie(Astro.request, 'prc_lib'), SESSION_SECRET);
+if (!memberId) return Astro.redirect('/library#join');
+const member = await DB.prepare(
+  "SELECT id FROM library_members WHERE id = ? AND active = 1 AND (expires_at IS NULL OR expires_at > datetime('now'))"
+).bind(memberId).first();
+if (!member) return Astro.redirect('/library#join');
+
+const g = guides.find((x) => x.slug === Astro.params.slug);
+if (!g) return Astro.redirect('/library');
+---
+<Base
+  title={g.title}
+  kicker={`Library · ${g.audience} · ${g.minutes} min`}
+  heading={g.title}
+  lede={g.intro}
+>
+  <section class="section">
+    <div class="container" style="max-width: 800px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:2rem;" class="no-print">
+        <a href="/library" style="text-decoration:none;">← Library</a>
+        <button class="btn dark" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+
+      {g.sections.map((s) => (
+        <div style="margin-bottom:2.4rem;">
+          <h2 style="margin-bottom:0.7rem;">{s.heading}</h2>
+          {s.body && <p style="color:var(--body); margin-bottom:0.7rem;">{s.body}</p>}
+          {s.items && (
+            <ul class="list-check">
+              {s.items.map((item) => <li>{item}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+
+      <div class="wire-box no-print" style="margin-top:2.5rem;">
+        <div class="big">Want this done, not just documented?</div>
+        <p>Members get preferred access to PRC services — from a Records Health Check to the full transition review.</p>
+        <p style="margin-top:1rem;"><a class="btn" href="/consultation">Book a Consultation</a></p>
+      </div>
+
+      <p class="no-print" style="margin-top:1.5rem; color: var(--mutetxt); font-size:0.9rem;">
+        Educational content, not legal/tax/medical advice — <a href="/service-boundaries">Service Boundaries</a>.
+      </p>
+    </div>
+  </section>
+
+  <style>
+    @media print {
+      .no-print, .site-header, .site-footer, .cta-band, .page-hero::after { display: none !important; }
+      .page-hero { background: #fff !important; padding: 1rem 0 !important; }
+      .page-hero h1, .page-hero .lede, .page-hero .kicker { color: #000 !important; }
+      body { background: #fff; }
+    }
+  </style>
+</Base>
