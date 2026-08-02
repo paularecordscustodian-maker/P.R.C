@@ -28,7 +28,8 @@ const checkout = LIBRARY_CHECKOUT_URL || '';
       <div class="section-head">
         <div class="kicker">{member ? 'Member Guides' : 'What Members Get'}</div>
         <h2>Guides in the library</h2>
-        {!member && <p>Every guide goes deep on one situation — the sequence, the records, the mistakes that cost people money. Free previews: the <a href="/checklists">seven category checklists</a>.</p>}
+        {member && <p><a class="btn dark" href="/api/library/ebook">Download the complete collection (EPUB e-book)</a></p>}
+        {!member && <p>Every guide goes deep on one situation — the sequence, the records, the mistakes that cost people money. Members also get the whole collection as a downloadable e-book. Free previews: the <a href="/checklists">seven category checklists</a> and <a href="/guides">starter guides</a>.</p>}
       </div>
       <div class="cards">
         {guides.map((g) => (
