@@ -65,6 +65,12 @@ journey with zero monthly cost.
 
 - **Review new leads**: visit `/admin`, enter the admin token. Intakes, bookings, and
   subscribers are listed newest-first; mark them contacted/closed.
+- **Consultation scheduling**: visitors pick real 30-minute slots (Mon–Fri 10:00–16:00
+  Central, 24h lead, 14-day window — edit `site/src/lib/slots.ts` to change). Booked slots
+  disappear for everyone else; mark a booking `closed` in /admin to release its slot.
+  To switch to Cal.com instead: create a cal.com account, connect the calendar, then set
+  Pages env var `CALCOM_LINK` to the event link (e.g. `paula/consultation`) — the page swaps
+  to the official Cal.com embed automatically.
 - **Onboard a client**: /admin → "Create client" → give them the generated access code.
   They log in at `/login` and see `/portal`.
 - **Post an update**: /admin → "Post client update" (pick client, title, body). It appears

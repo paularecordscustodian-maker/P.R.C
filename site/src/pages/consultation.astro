@@ -1,76 +1,160 @@
 ---
 import Base from '../layouts/Base.astro';
+import { env } from '../lib/session';
+import { RULES } from '../lib/slots';
+
+export const prerender = false;
+
+const calLink = env(Astro.locals).CALCOM_LINK || '';
 ---
 <Base
   title="Book a Consultation"
   kicker="Book a Consultation"
   heading="Talk with PRC about your records"
-  lede="A consultation is a conversation about where your records stand and what readiness would look like — no obligation."
+  lede="Pick a time that works — a consultation is a conversation about where your records stand, no obligation."
 >
   <section class="section">
     <div class="container">
-      <div class="cards" style="grid-template-columns: 1.2fr 1fr;">
+      <div class="cards" style="grid-template-columns: 1fr 1.2fr;">
         <div>
           <h2 style="margin-bottom:1rem;">What to expect</h2>
           <ul class="list-check">
-            <li>A short conversation about your situation — business transition, life event, or general readiness.</li>
+            <li>A 30-minute conversation about your situation — business transition, life event, or general readiness.</li>
             <li>A plain-language explanation of which PRC service fits, if any.</li>
             <li>A written scope before any engagement begins — no surprises.</li>
             <li>No legal, tax, accounting, or medical advice — see <a href="/service-boundaries">Service Boundaries</a>.</li>
           </ul>
-          <p style="margin-top:1.2rem; color:var(--muted);">
+          <p style="margin-top:1.2rem; color:var(--muted, #5f6b7d);">
             Prefer to start in writing? Fill out the <a href="/intake">client intake form</a> and we'll reach out.
           </p>
         </div>
-        <div>
-          <form class="form card" id="bk-form" onsubmit="return false;" style="padding:1.7rem;" data-wire="calcom-embed-optional">
-            <h3>Request a consultation</h3>
-            <input type="text" id="bk-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
-            <div><label for="bk-name">Name</label><input id="bk-name" type="text" placeholder="Your name" /></div>
-            <div><label for="bk-email">Email</label><input id="bk-email" type="email" placeholder="you@example.com" /></div>
-            <div><label for="bk-phone">Phone (optional)</label><input id="bk-phone" type="tel" placeholder="(555) 555-5555" /></div>
-            <div>
-              <label for="bk-topic">What's it about?</label>
-              <select id="bk-topic">
-                <option>Property / business transition</option>
-                <option>Business records health check</option>
-                <option>Life transition (family, caregiving, fresh start…)</option>
-                <option>Partnership / workshop</option>
-                <option>Something else</option>
-              </select>
-            </div>
-            <div><label for="bk-times">Days/times that work for you</label><input id="bk-times" type="text" placeholder="e.g. weekday mornings, or Tue/Thu after 5pm" /></div>
-            <button class="btn" id="bk-go">Request consultation</button>
-            <p class="note" id="bk-msg"></p>
-          </form>
-          <div class="wire-box" id="bk-done" style="display:none;">
-            <div class="big">Request received.</div>
-            <p>PRC will confirm a time by email — usually within one business day.</p>
+
+        {calLink ? (
+          <div>
+            <div id="cal-embed" style="width:100%; min-height:560px; overflow:auto;"></div>
+            <script is:inline define:vars={{ calLink }}>
+              (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
+              Cal("init", { origin: "https://cal.com" });
+              Cal("inline", { elementOrSelector: "#cal-embed", calLink: calLink, config: { theme: "light" } });
+            </script>
           </div>
-        </div>
+        ) : (
+          <div>
+            <form class="form card" id="bk-form" onsubmit="return false;" style="padding:1.7rem;">
+              <h3>Pick a time</h3>
+              <input type="text" id="bk-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
+              <div>
+                <label>Available times <span style="font-weight:400;">(shown in your time zone)</span></label>
+                <div id="slot-days" class="slot-days"><p class="note">Loading available times…</p></div>
+                <p class="note" id="slot-chosen" style="margin-top:0.5rem;"></p>
+                <p class="note"><label style="display:inline; font-weight:400;"><input type="checkbox" id="bk-noslot" /> None of these work — I'll describe times instead</label></p>
+                <input id="bk-times" type="text" placeholder="e.g. weekday evenings after 6pm" style="display:none;" />
+              </div>
+              <div class="row">
+                <div><label for="bk-name">Name</label><input id="bk-name" /></div>
+                <div><label for="bk-email">Email</label><input id="bk-email" type="email" /></div>
+              </div>
+              <div class="row">
+                <div><label for="bk-phone">Phone (optional)</label><input id="bk-phone" type="tel" /></div>
+                <div>
+                  <label for="bk-topic">What's it about?</label>
+                  <select id="bk-topic">
+                    <option>Property / business transition</option>
+                    <option>Business records health check</option>
+                    <option>Life transition (family, caregiving, fresh start…)</option>
+                    <option>Partnership / workshop</option>
+                    <option>Something else</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn" id="bk-go">Book consultation</button>
+              <p class="note" id="bk-msg" style="color:#b00020;"></p>
+            </form>
+            <div class="wire-box" id="bk-done" style="display:none;">
+              <div class="big">Booked — thank you.</div>
+              <p id="bk-done-detail">PRC will confirm by email.</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   </section>
 
-  <script>
-    document.querySelector('#bk-go').addEventListener('click', async () => {
-      const v = (id) => document.querySelector('#' + id).value;
-      const btn = document.querySelector('#bk-go');
-      btn.disabled = true;
-      const r = await fetch('/api/booking', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: v('bk-name'), email: v('bk-email'), phone: v('bk-phone'),
-          topic: v('bk-topic'), pref_times: v('bk-times'), website: v('bk-hp'),
-        }),
-      }).then(x => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
-      if (r.ok) {
-        document.querySelector('#bk-form').style.display = 'none';
-        document.querySelector('#bk-done').style.display = '';
-      } else {
-        document.querySelector('#bk-msg').textContent = r.error || 'Something went wrong.';
-        btn.disabled = false;
+  <style>
+    .slot-days { display: grid; gap: 0.8rem; max-height: 340px; overflow-y: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem; }
+    .slot-day strong { display: block; font-size: 0.85rem; color: var(--ink); margin-bottom: 0.4rem; }
+    .slot-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .slot-btn {
+      border: 1px solid var(--line); background: var(--white); border-radius: 8px;
+      padding: 0.35rem 0.7rem; font-size: 0.85rem; cursor: pointer; color: var(--body);
+    }
+    .slot-btn:hover { border-color: var(--gold); }
+    .slot-btn.sel { background: var(--gold); color: #fff; border-color: var(--gold); font-weight: 600; }
+  </style>
+
+  {!calLink && (
+    <script>
+      const $ = (s) => document.querySelector(s);
+      let chosen = null;
+
+      function fmtDay(d) { return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }); }
+      function fmtTime(d) { return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+
+      async function loadSlots() {
+        const r = await fetch('/api/slots').then((x) => x.json()).catch(() => null);
+        const box = $('#slot-days');
+        if (!r?.ok || !r.slots.length) { box.innerHTML = '<p class="note">No open times right now — check the box below and describe what works.</p>'; return; }
+        const byDay = {};
+        for (const iso of r.slots) {
+          const d = new Date(iso);
+          const k = fmtDay(d);
+          (byDay[k] = byDay[k] || []).push({ iso, label: fmtTime(d) });
+        }
+        box.innerHTML = Object.entries(byDay).map(([day, slots]) =>
+          `<div class="slot-day"><strong>${day}</strong><div class="slot-list">${
+            slots.map((s) => `<button type="button" class="slot-btn" data-iso="${s.iso}">${s.label}</button>`).join('')
+          }</div></div>`).join('');
       }
-    });
-  </script>
+
+      $('#slot-days').addEventListener('click', (e) => {
+        const b = e.target.closest('.slot-btn'); if (!b) return;
+        document.querySelectorAll('.slot-btn.sel').forEach((x) => x.classList.remove('sel'));
+        b.classList.add('sel');
+        chosen = b.dataset.iso;
+        $('#slot-chosen').textContent = 'Selected: ' + new Date(chosen).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        $('#bk-noslot').checked = false; $('#bk-times').style.display = 'none';
+      });
+
+      $('#bk-noslot').addEventListener('change', (e) => {
+        $('#bk-times').style.display = e.target.checked ? '' : 'none';
+        if (e.target.checked) { chosen = null; document.querySelectorAll('.slot-btn.sel').forEach((x) => x.classList.remove('sel')); $('#slot-chosen').textContent = ''; }
+      });
+
+      $('#bk-go').addEventListener('click', async () => {
+        const v = (id) => $('#' + id).value;
+        if (!chosen && !$('#bk-noslot').checked) { $('#bk-msg').textContent = 'Pick a time, or check "none of these work".'; return; }
+        const btn = $('#bk-go'); btn.disabled = true; $('#bk-msg').textContent = '';
+        const r = await fetch('/api/booking', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: v('bk-name'), email: v('bk-email'), phone: v('bk-phone'), topic: v('bk-topic'),
+            slot_start: chosen || '', pref_times: chosen ? '' : v('bk-times'), website: v('bk-hp'),
+          }),
+        }).then((x) => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+        if (r.ok) {
+          $('#bk-form').style.display = 'none';
+          $('#bk-done').style.display = '';
+          $('#bk-done-detail').textContent = r.slot_start
+            ? 'Your consultation is requested for ' + new Date(r.slot_start).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' (your time). PRC will confirm by email.'
+            : 'PRC will confirm a time by email — usually within one business day.';
+        } else {
+          $('#bk-msg').textContent = r.error || 'Something went wrong.';
+          btn.disabled = false;
+          if ((r.error || '').includes('taken') || (r.error || '').includes('available')) loadSlots();
+        }
+      });
+
+      loadSlots();
+    </script>
+  )}
 </Base>

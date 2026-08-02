@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   phone TEXT,
   topic TEXT,
   pref_times TEXT,
+  slot_start TEXT,
   status TEXT NOT NULL DEFAULT 'new'
 );
 

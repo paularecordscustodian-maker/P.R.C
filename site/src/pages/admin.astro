@@ -115,8 +115,8 @@ import Base from '../layouts/Base.astro';
         d.intakes.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.type)}</td><td style="max-width:340px">${esc(r.situation)}</td><td>${statusSel('intake', r)}</td></tr>`).join('')
       );
       if (t === 'bookings') p.innerHTML = table(
-        ['When','Name','Email','Phone','Topic','Preferred times','Status'],
-        d.bookings.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.topic)}</td><td>${esc(r.pref_times)}</td><td>${statusSel('booking', r)}</td></tr>`).join('')
+        ['When','Name','Email','Phone','Topic','Slot','Preferred times','Status'],
+        d.bookings.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.topic)}</td><td><strong>${r.slot_start ? new Date(r.slot_start).toLocaleString([], {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : ''}</strong></td><td>${esc(r.pref_times)}</td><td>${statusSel('booking', r)}</td></tr>`).join('')
       );
       if (t === 'subscribers') p.innerHTML = table(
         ['When','Email','Source'],
