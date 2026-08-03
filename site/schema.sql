@@ -71,3 +71,17 @@ CREATE TABLE IF NOT EXISTS orders (
   notes TEXT,
   status TEXT NOT NULL DEFAULT 'new'
 );
+
+CREATE TABLE IF NOT EXISTS partners (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  org TEXT NOT NULL,
+  org_type TEXT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  interests TEXT,
+  audience TEXT,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'new'
+);

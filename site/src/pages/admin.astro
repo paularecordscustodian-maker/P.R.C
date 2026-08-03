@@ -27,6 +27,7 @@ import Base from '../layouts/Base.astro';
           <button class="btn ghost tab" data-t="updates" style="color:var(--ink); border-color:var(--line);">Portal updates</button>
           <button class="btn ghost tab" data-t="members" style="color:var(--ink); border-color:var(--line);">Library members</button>
           <button class="btn ghost tab" data-t="orders" style="color:var(--ink); border-color:var(--line);">Orders</button>
+          <button class="btn ghost tab" data-t="partners" style="color:var(--ink); border-color:var(--line);">Partners</button>
         </div>
 
         <div id="panel" style="overflow-x:auto;"></div>
@@ -133,6 +134,10 @@ import Base from '../layouts/Base.astro';
       if (t === 'orders') p.innerHTML = table(
         ['When','Name','Email','Phone','Ship to','Items','Notes','Status'],
         d.orders.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td style="max-width:200px">${esc(r.address)}</td><td>${itemsLabel(r.items)}</td><td style="max-width:200px">${esc(r.notes)}</td><td>${statusSel('order', r)}</td></tr>`).join('')
+      );
+      if (t === 'partners') p.innerHTML = table(
+        ['When','Organization','Type','Contact','Email','Phone','Interests','Audience','Message','Status'],
+        d.partners.map(r => `<tr><td>${esc(r.created_at)}</td><td><strong>${esc(r.org)}</strong></td><td>${esc(r.org_type)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.interests)}</td><td>${esc(r.audience)}</td><td style="max-width:260px">${esc(r.message)}</td><td>${statusSel('partner', r)}</td></tr>`).join('')
       );
       if (t === 'updates') p.innerHTML = table(
         ['When','Client','Kind','Title','Body'],

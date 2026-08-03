@@ -3,7 +3,7 @@ import { env, json, isAdmin, clean } from '../../../lib/session';
 
 export const prerender = false;
 
-const TABLES: Record<string, string> = { intake: 'intakes', booking: 'bookings', order: 'orders' };
+const TABLES: Record<string, string> = { intake: 'intakes', booking: 'bookings', order: 'orders', partner: 'partners' };
 const STATUSES = new Set(['new', 'contacted', 'scheduled', 'invoiced', 'paid', 'shipped', 'closed']);
 
 export const POST: APIRoute = async ({ request, locals }) => {

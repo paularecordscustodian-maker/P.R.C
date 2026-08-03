@@ -49,9 +49,88 @@ import Base from '../layouts/Base.astro';
         </div>
       </div>
       <p style="margin-top:2rem;">
-        <a class="btn" href="/consultation">Start a partnership conversation</a>
-        &nbsp; <span style="color:var(--mutetxt);">— choose "Partnership / workshop" in the request form.</span>
+        <a class="btn" href="#inquire">Start a partnership inquiry</a>
       </p>
     </div>
   </section>
+
+  <section class="section" id="inquire">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Partner Inquiry</div>
+        <h2>Tell us about your organization</h2>
+        <p>PRC replies to every partner inquiry personally — usually within two business days.</p>
+      </div>
+      <form class="form" id="pf" onsubmit="return false;">
+        <input type="text" id="p-hp" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true" />
+        <div class="row">
+          <div><label for="p-org">Organization *</label><input id="p-org" placeholder="Organization name" /></div>
+          <div>
+            <label for="p-type">Organization type</label>
+            <select id="p-type">
+              <option>School / college / trade school</option>
+              <option>Workforce board / career center</option>
+              <option>Nonprofit / family-resource center</option>
+              <option>Church / ministry</option>
+              <option>Housing / property-owner association</option>
+              <option>Reentry / veteran / disability / senior organization</option>
+              <option>Chamber / SBDC / incubator</option>
+              <option>Professional firm (CPA, attorney, insurance, IT, HR)</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label for="p-name">Contact name *</label><input id="p-name" /></div>
+          <div><label for="p-email">Email *</label><input id="p-email" type="email" /></div>
+        </div>
+        <div class="row">
+          <div><label for="p-phone">Phone (optional)</label><input id="p-phone" type="tel" /></div>
+          <div><label for="p-audience">Who you serve, roughly how many</label><input id="p-audience" placeholder="e.g. ~200 students per year" /></div>
+        </div>
+        <div>
+          <label>What are you interested in?</label>
+          <div class="pf-checks">
+            <label><input type="checkbox" data-int value="Workshops / presentations" /> Workshops &amp; presentations</label>
+            <label><input type="checkbox" data-int value="Life Ready programs" /> Life Ready programs (co-branded kits &amp; courses)</label>
+            <label><input type="checkbox" data-int value="Professional referrals" /> Professional referrals</label>
+            <label><input type="checkbox" data-int value="Something else" /> Something else</label>
+          </div>
+        </div>
+        <div><label for="p-msg">Anything else we should know?</label><textarea id="p-msg" rows="4" placeholder="Timing, programs, the people you serve…"></textarea></div>
+        <div>
+          <button class="btn" id="p-go">Send inquiry</button>
+          <p class="note" id="p-msg-out" style="color:#b00020; margin-top:0.6rem;"></p>
+        </div>
+      </form>
+      <div class="wire-box" id="p-done" style="display:none; max-width:640px;">
+        <div class="big">Inquiry received — thank you.</div>
+        <p>PRC will reach out to plan next steps. Want to talk sooner?
+        <a href="/consultation">Book a time directly</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .pf-checks { display: grid; gap: 0.4rem; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; }
+    .pf-checks label { display: flex; gap: 0.55rem; align-items: baseline; font-weight: 400; margin: 0; color: var(--body); font-size: 0.95rem; }
+  </style>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    $('#p-go').addEventListener('click', async () => {
+      const v = (id) => $('#' + id).value;
+      const btn = $('#p-go'); btn.disabled = true; $('#p-msg-out').textContent = '';
+      const interests = [...document.querySelectorAll('[data-int]:checked')].map((c) => c.value);
+      const r = await fetch('/api/partner', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          org: v('p-org'), org_type: v('p-type'), name: v('p-name'), email: v('p-email'),
+          phone: v('p-phone'), audience: v('p-audience'), interests, message: v('p-msg'), website: v('p-hp'),
+        }),
+      }).then((x) => x.json()).catch(() => ({ ok: false, error: 'Network error — try again.' }));
+      if (r.ok) { $('#pf').style.display = 'none'; $('#p-done').style.display = ''; }
+      else { $('#p-msg-out').textContent = r.error || 'Something went wrong.'; btn.disabled = false; }
+    });
+  </script>
 </Base>
