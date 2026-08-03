@@ -96,5 +96,10 @@ journey with zero monthly cost.
   provider's webhook to `library_members` later).
 - **Change prices**: `site/src/data/pricing.ts` (services + estimator formula) and
   `site/src/data/products.ts` (products). Push to deploy.
+- **Traffic stats**: Cloudflare dashboard → Web Analytics → paularecordscustodian.com
+  (cookieless; no consent banner needed).
+- **Backups**: a GitHub Action exports the full database every Monday to a workflow
+  artifact (90-day retention; repo → Actions → "Weekly D1 backup" → run manually anytime).
+  Restore: `npx wrangler d1 execute prc-db --remote --file=prc-db-backup.sql`.
 - **Change admin token / session secret**: Cloudflare dashboard → Pages → prc-site →
   Settings → Environment variables.

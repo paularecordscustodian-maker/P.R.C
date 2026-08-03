@@ -18,6 +18,14 @@ const nav = [
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title} | Paula Records Custodian</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={`https://paularecordscustodian.com${path === '/' ? '/' : path}`} />
+  <meta property="og:site_name" content="Paula Records Custodian" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={`https://paularecordscustodian.com${path === '/' ? '/' : path}`} />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#16222e" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
@@ -176,5 +184,7 @@ const nav = [
       }
     }
   </script>
+  <!-- Cloudflare Web Analytics: cookieless, privacy-first -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "cf54ad1ce7ff48008d764ebbb4348351"}'></script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+name: Weekly D1 backup
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'   # Mondays 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Export D1 database
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler@4 d1 export prc-db --remote --output=prc-db-backup.sql
+          echo "Backup size: $(wc -c < prc-db-backup.sql) bytes"
+          grep -c "INSERT INTO" prc-db-backup.sql || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prc-db-backup-${{ github.run_id }}
+          path: prc-db-backup.sql
+          retention-days: 90
