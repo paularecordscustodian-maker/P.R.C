@@ -28,6 +28,7 @@ import Base from '../layouts/Base.astro';
           <button class="btn ghost tab" data-t="members" style="color:var(--ink); border-color:var(--line);">Library members</button>
           <button class="btn ghost tab" data-t="orders" style="color:var(--ink); border-color:var(--line);">Orders</button>
           <button class="btn ghost tab" data-t="partners" style="color:var(--ink); border-color:var(--line);">Partners</button>
+          <button class="btn ghost tab" data-t="documents" style="color:var(--ink); border-color:var(--line);">Documents</button>
         </div>
 
         <div id="panel" style="overflow-x:auto;"></div>
@@ -41,6 +42,17 @@ import Base from '../layouts/Base.astro';
               <input id="c-email" placeholder="Email" />
               <button class="btn" id="c-go">Create + generate access code</button>
               <p class="note" id="c-out"></p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Deliver a document</h3>
+            <div class="form">
+              <select id="d-client"></select>
+              <input id="d-label" placeholder="Label shown to client (e.g. Missing-Record Report — August)" />
+              <input id="d-file" type="file" />
+              <button class="btn" id="d-go">Upload to client portal</button>
+              <p class="note" id="d-out"></p>
+              <p class="note">Max 20 MB. Every upload, download, and denied access is logged in the Documents tab.</p>
             </div>
           </div>
           <div class="card">
@@ -139,11 +151,23 @@ import Base from '../layouts/Base.astro';
         ['When','Organization','Type','Contact','Email','Phone','Interests','Audience','Message','Status'],
         d.partners.map(r => `<tr><td>${esc(r.created_at)}</td><td><strong>${esc(r.org)}</strong></td><td>${esc(r.org_type)}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.interests)}</td><td>${esc(r.audience)}</td><td style="max-width:260px">${esc(r.message)}</td><td>${statusSel('partner', r)}</td></tr>`).join('')
       );
+      if (t === 'documents') p.innerHTML =
+        table(
+          ['When','Client','Label','File','Size','',''],
+          d.documents.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.client_name)}</td><td>${esc(r.label)}</td><td>${esc(r.filename)}</td><td>${(r.size/1024).toFixed(0)} KB</td><td></td><td><button data-docdel="${r.id}">Delete</button></td></tr>`).join('')
+        ) +
+        '<h3 style="margin:1.6rem 0 0.6rem;">Access log</h3>' +
+        table(
+          ['When','Actor','Action','Detail','IP'],
+          d.doc_audit.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.actor)}</td><td>${r.action==='denied' ? '<strong style="color:#b00020">denied</strong>' : esc(r.action)}</td><td>${esc(r.detail)}</td><td>${esc(r.ip)}</td></tr>`).join('')
+        );
       if (t === 'updates') p.innerHTML = table(
         ['When','Client','Kind','Title','Body'],
         d.updates.map(r => `<tr><td>${esc(r.created_at)}</td><td>${esc(r.client_name)}</td><td>${esc(r.kind)}</td><td>${esc(r.title)}</td><td style="max-width:380px">${esc(r.body)}</td></tr>`).join('')
       );
-      $('#u-client').innerHTML = d.clients.filter(c=>c.active).map(c => `<option value="${c.id}">${esc(c.name)}${c.org ? ' — '+esc(c.org) : ''}</option>`).join('');
+      const clientOpts = d.clients.filter(c=>c.active).map(c => `<option value="${c.id}">${esc(c.name)}${c.org ? ' — '+esc(c.org) : ''}</option>`).join('');
+      $('#u-client').innerHTML = clientOpts;
+      $('#d-client').innerHTML = clientOpts;
     }
 
     async function load() {
@@ -184,6 +208,26 @@ import Base from '../layouts/Base.astro';
         await api('/api/admin/members', { method:'POST', body: JSON.stringify({ action:'set_active', id, active: Number(active) }) });
         return load();
       }
+    });
+
+    $('#panel').addEventListener('click', async (e) => {
+      const del = e.target.closest('button[data-docdel]');
+      if (del && confirm('Delete this document? The file is removed permanently; the audit log keeps the history.')) {
+        await api('/api/admin/docs', { method:'POST', body: JSON.stringify({ action:'delete', id: del.dataset.docdel }) });
+        load();
+      }
+    });
+
+    $('#d-go').addEventListener('click', async () => {
+      const f = $('#d-file').files[0];
+      if (!f) { $('#d-out').textContent = 'Pick a file first.'; return; }
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('client_id', $('#d-client').value);
+      fd.append('label', $('#d-label').value);
+      const r = await fetch('/api/admin/docs', { method: 'POST', body: fd }).then(x => x.json()).catch(() => ({ ok:false, error:'Upload failed' }));
+      $('#d-out').textContent = r.ok ? 'Delivered — visible in the client portal now.' : (r.error || 'Failed');
+      if (r.ok) { $('#d-file').value = ''; $('#d-label').value = ''; load(); }
     });
 
     $('#m-go').addEventListener('click', async () => {

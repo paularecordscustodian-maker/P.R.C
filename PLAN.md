@@ -82,6 +82,13 @@ journey with zero monthly cost.
   They log in at `/login` and see `/portal`.
 - **Post an update**: /admin → "Post client update" (pick client, title, body). It appears
   in their portal immediately.
+- **Deliver a document**: /admin → "Deliver a document" (pick client, label, file ≤20 MB).
+  Files live in private encrypted storage (Workers KV), download only through the client's
+  signed-in portal session with per-client ownership checks; the Documents tab shows every
+  file plus the full access log (uploads, downloads, denied attempts, IPs). Delete removes
+  the file permanently but keeps the audit history. Direction is one-way by design: PRC → client.
+  (R2 object storage is the roomier upgrade — enable R2 once in the CF dashboard if files
+  outgrow KV.)
 - **Sell a Library membership**: /admin → "Add library member" (name, email, expiration:
   never / 1 month / 1 year) → give them the `LIB-` code. They enter it at `/library` and get
   all member guides. Deactivate or let expire to end access.

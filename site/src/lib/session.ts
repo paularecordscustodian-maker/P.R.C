@@ -53,7 +53,7 @@ export function json(data: unknown, status = 200, headers: Record<string, string
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
 
-type RuntimeEnv = { DB: any; ADMIN_TOKEN: string; SESSION_SECRET: string; LIBRARY_CHECKOUT_URL?: string; CALCOM_LINK?: string };
+type RuntimeEnv = { DB: any; DOCS: any; ADMIN_TOKEN: string; SESSION_SECRET: string; LIBRARY_CHECKOUT_URL?: string; CALCOM_LINK?: string };
 export function env(locals: any): RuntimeEnv {
   return (locals as any).runtime.env as RuntimeEnv;
 }

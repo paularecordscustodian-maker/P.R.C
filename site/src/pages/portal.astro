@@ -15,6 +15,10 @@ const updates = (await DB.prepare(
   'SELECT * FROM client_updates WHERE client_id = ? ORDER BY id DESC LIMIT 100'
 ).bind(clientId).all()).results;
 
+const documents = (await DB.prepare(
+  'SELECT id, created_at, label, filename, size FROM documents WHERE client_id = ? ORDER BY id DESC LIMIT 100'
+).bind(clientId).all()).results;
+
 const kindLabel: Record<string, string> = {
   update: 'Update', deliverable: 'Deliverable', milestone: 'Milestone', request: 'Action needed',
 };
@@ -53,9 +57,37 @@ const kindLabel: Record<string, string> = {
         </div>
       )}
 
+      <div style="margin-top:3rem;">
+        <div class="section-head">
+          <div class="kicker">Your Documents</div>
+          <h2>Deliverables from PRC</h2>
+        </div>
+        {documents.length === 0 ? (
+          <p style="color: var(--mutetxt);">No documents yet — deliverables will appear here as PRC completes them.</p>
+        ) : (
+          <div style="overflow-x:auto;">
+            <table class="plain">
+              <thead><tr><th>Delivered</th><th>Document</th><th>File</th><th>Size</th><th></th></tr></thead>
+              <tbody>
+                {documents.map((doc: any) => (
+                  <tr>
+                    <td style="white-space:nowrap;">{String(doc.created_at).slice(0, 10)}</td>
+                    <td style="font-weight:600; color:var(--ink);">{doc.label || doc.filename}</td>
+                    <td>{doc.filename}</td>
+                    <td style="white-space:nowrap;">{(doc.size / 1024).toFixed(0)} KB</td>
+                    <td><a class="btn dark" style="padding:0.4rem 1rem; font-size:0.88rem;" href={`/api/docs/${doc.id}`}>Download</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <p style="margin-top:2rem; color: var(--mutetxt); font-size: 0.92rem; max-width: 70ch;">
-        Documents are exchanged through the secure channel agreed in your engagement — never through
-        this portal or public forms. Questions? Reply to your PRC contact directly, or
+        Documents here are PRC deliverables, provided to you through authenticated, logged access.
+        Sending records <em>to</em> PRC still happens only through the secure channel agreed in your
+        engagement — never through public forms. Questions? Reply to your PRC contact directly, or
         <a href="/consultation">request a follow-up consultation</a>.
       </p>
     </div>

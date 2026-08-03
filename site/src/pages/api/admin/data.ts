@@ -6,7 +6,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ request, locals }) => {
   if (!isAdmin(request, locals)) return json({ ok: false, error: 'Unauthorized' }, 401);
   const db = env(locals).DB;
-  const [intakes, bookings, subscribers, clients, updates, members, orders, partners] = await Promise.all([
+  const [intakes, bookings, subscribers, clients, updates, members, orders, partners, documents, doc_audit] = await Promise.all([
     db.prepare('SELECT * FROM intakes ORDER BY id DESC LIMIT 200').all(),
     db.prepare('SELECT * FROM bookings ORDER BY id DESC LIMIT 200').all(),
     db.prepare('SELECT * FROM subscribers ORDER BY id DESC LIMIT 500').all(),
@@ -15,11 +15,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
     db.prepare('SELECT * FROM library_members ORDER BY id DESC LIMIT 500').all(),
     db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT 200').all(),
     db.prepare('SELECT * FROM partners ORDER BY id DESC LIMIT 200').all(),
+    db.prepare('SELECT d.*, c.name AS client_name FROM documents d JOIN clients c ON c.id = d.client_id ORDER BY d.id DESC LIMIT 200').all(),
+    db.prepare('SELECT * FROM doc_audit ORDER BY id DESC LIMIT 200').all(),
   ]);
   return json({
     ok: true,
     intakes: intakes.results, bookings: bookings.results,
     subscribers: subscribers.results, clients: clients.results, updates: updates.results,
     members: members.results, orders: orders.results, partners: partners.results,
+    documents: documents.results, doc_audit: doc_audit.results,
   });
 };

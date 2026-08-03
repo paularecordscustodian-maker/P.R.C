@@ -92,3 +92,24 @@ CREATE TABLE IF NOT EXISTS auth_attempts (
   ts INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_attempts ON auth_attempts(bucket, ip, ts);
+
+CREATE TABLE IF NOT EXISTS documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NOT NULL REFERENCES clients(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  label TEXT,
+  filename TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  content_type TEXT,
+  kv_key TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS doc_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  doc_id INTEGER,
+  client_id INTEGER,
+  actor TEXT NOT NULL,
+  action TEXT NOT NULL,
+  detail TEXT,
+  ip TEXT
+);
