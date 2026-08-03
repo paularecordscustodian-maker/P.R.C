@@ -5,7 +5,7 @@ import { rateLimited } from '../../lib/ratelimit';
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  if (rateLimited(request, 'login')) return json({ ok: false, error: 'Too many attempts — wait a minute and try again.' }, 429);
+  if (await rateLimited(env(locals).DB, request, 'login')) return json({ ok: false, error: 'Too many attempts — wait a minute and try again.' }, 429);
   let body: any;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Bad request' }, 400); }
 

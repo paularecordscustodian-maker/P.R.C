@@ -85,3 +85,10 @@ CREATE TABLE IF NOT EXISTS partners (
   message TEXT,
   status TEXT NOT NULL DEFAULT 'new'
 );
+
+CREATE TABLE IF NOT EXISTS auth_attempts (
+  ip TEXT NOT NULL,
+  bucket TEXT NOT NULL,
+  ts INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_attempts ON auth_attempts(bucket, ip, ts);

@@ -1,18 +1,17 @@
-// Per-IP sliding-window rate limiter, held in isolate memory.
-// Not a hard guarantee (each worker isolate has its own map, and isolates recycle),
-// but it turns online brute-force of access codes from feasible into futile when
-// layered on a ~900M-combination code space.
+// Durable per-IP sliding-window rate limiter backed by D1 (shared across all isolates).
+// Used only on auth endpoints, so the per-attempt write cost is negligible.
 
-const hits = new Map<string, number[]>();
-
-export function rateLimited(request: Request, bucket: string, limit = 10, windowMs = 60_000): boolean {
+export async function rateLimited(db: any, request: Request, bucket: string, limit = 10, windowMs = 60_000): Promise<boolean> {
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const key = `${bucket}:${ip}`;
   const now = Date.now();
-  const arr = (hits.get(key) || []).filter((t) => now - t < windowMs);
-  if (arr.length >= limit) { hits.set(key, arr); return true; }
-  arr.push(now);
-  hits.set(key, arr);
-  if (hits.size > 10_000) hits.clear(); // memory backstop
+  const cutoff = now - windowMs;
+  const row = await db.prepare(
+    'SELECT COUNT(*) AS n FROM auth_attempts WHERE bucket = ? AND ip = ? AND ts > ?'
+  ).bind(bucket, ip, cutoff).first();
+  if ((row?.n ?? 0) >= limit) return true;
+  await db.batch([
+    db.prepare('INSERT INTO auth_attempts (ip, bucket, ts) VALUES (?, ?, ?)').bind(ip, bucket, now),
+    db.prepare('DELETE FROM auth_attempts WHERE ts < ?').bind(now - 3_600_000),
+  ]);
   return false;
 }
