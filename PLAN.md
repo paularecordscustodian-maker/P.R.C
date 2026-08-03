@@ -59,7 +59,14 @@ journey with zero monthly cost.
 - No document uploads anywhere until the written-security-policy layer exists (MFA, encryption,
   audit logging, retention). The portal shows status and text updates only.
 - Public forms tell users not to submit account numbers / ID numbers / medical details.
-- Legal pages remain marked draft until attorney review.
+- Legal pages (Privacy, Terms, Records Handling, Service Boundaries) are published final,
+  effective 2026-08-02, and describe the site's actual data practices. They were written
+  in-house, not by an attorney — a legal review before high-stakes B2B engagements is still
+  money well spent; governing law is set to Texas in the Terms (edit there if wrong).
+- Contact address published on legal pages: contact@paularecordscustodian.com. ONE MANUAL
+  STEP: enable email forwarding in the Porkbun dashboard (Domain → Email Forwarding →
+  contact@ → the owner's inbox). The MX records already point at Porkbun forwarding; mail
+  works the moment the forward exists. (No API for this — dashboard only.)
 
 ## 5. Runbook (for the owner)
 
