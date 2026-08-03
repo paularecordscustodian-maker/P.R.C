@@ -87,5 +87,7 @@ journey with zero monthly cost.
   the `/library` join card switches from "arranged directly" to a Subscribe button
   automatically. Issue the member code when the payment notification arrives (or wire the
   provider's webhook to `library_members` later).
+- **Change prices**: `site/src/data/pricing.ts` (services + estimator formula) and
+  `site/src/data/products.ts` (products). Push to deploy.
 - **Change admin token / session secret**: Cloudflare dashboard → Pages → prc-site →
   Settings → Environment variables.

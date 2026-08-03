@@ -1,0 +1,104 @@
+---
+import Base from '../layouts/Base.astro';
+import { oneTime, monthly, transition } from '../data/pricing';
+---
+<Base
+  title="Pricing"
+  kicker="Pricing"
+  heading="Clear starting points. Written scope. No surprises."
+  lede="Published launch pricing for every PRC service. Every engagement is confirmed by a written scope — entities, properties, units, accounts, documents, and review complexity — before work begins."
+>
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">One-Time Engagements</div>
+        <h2>Projects &amp; reviews</h2>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="plain">
+          <thead><tr><th>Service</th><th>Launch price</th><th>What it covers</th></tr></thead>
+          <tbody>
+            {oneTime.map((r) => (
+              <tr>
+                <td style="font-weight:600; color:var(--ink); min-width:220px;">{r.service}</td>
+                <td style="white-space:nowrap; color:var(--gold-dark); font-weight:700;">{r.price}</td>
+                <td style="color:var(--mutetxt);">{r.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="container">
+      <div class="cards" style="grid-template-columns: 1fr 1fr; align-items:start;">
+        <div class="card">
+          <h3>Property transition estimator</h3>
+          <p>New Ownership Records Transition Review, estimated from your unit count.</p>
+          <div class="form" style="margin-top:0.6rem;">
+            <div>
+              <label for="units">Units in the property</label>
+              <input id="units" type="number" min={transition.minUnits} max={transition.maxUnits} value="100" />
+            </div>
+            <p style="font-size:1.6rem; font-family:var(--serif); font-style:italic; color:var(--ink);">
+              Estimated: <span id="est" style="color:var(--gold-dark); font-weight:700;"></span>
+            </p>
+            <p class="note">
+              Base ${transition.base.toLocaleString()} + ${transition.perUnit}/unit. An estimate, not a quote —
+              the written scope (record volume, prior-system exports, open disputes) sets the final price.
+            </p>
+            <a class="btn" href="/consultation">Book a transition consultation</a>
+          </div>
+        </div>
+        <div>
+          <div class="section-head">
+            <div class="kicker">Ongoing Support</div>
+            <h2>Monthly service levels</h2>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="plain">
+              <thead><tr><th>Service</th><th>Price</th></tr></thead>
+              <tbody>
+                {monthly.map((r) => (
+                  <tr>
+                    <td><strong style="color:var(--ink);">{r.service}</strong><br /><span style="color:var(--mutetxt); font-size:0.9rem;">{r.detail}</span></td>
+                    <td style="white-space:nowrap; color:var(--gold-dark); font-weight:700; vertical-align:top;">{r.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prose">
+      <h2>How PRC prices work</h2>
+      <ul class="list-check">
+        <li>Every price above is a published starting point — launch pricing, honestly labeled.</li>
+        <li>Before any engagement, you get a written scope: what's included, what it costs, what's out of scope.</li>
+        <li>Scope is set by measurable things — entities, properties, units, accounts, transactions, documents, users, storage volume, and review complexity.</li>
+        <li>No engagement starts, and nothing is billed, until you approve the written scope.</li>
+      </ul>
+      <p style="margin-top:1.2rem;">
+        <a class="btn dark" href="/consultation">Get a scoped quote</a>
+      </p>
+    </div>
+  </section>
+
+  <script>
+    import { transition } from '../data/pricing';
+    const units = document.querySelector('#units');
+    const est = document.querySelector('#est');
+    function calc() {
+      const u = Math.min(Math.max(parseInt(units.value, 10) || transition.minUnits, transition.minUnits), transition.maxUnits);
+      est.textContent = '$' + (transition.base + transition.perUnit * u).toLocaleString();
+    }
+    units.addEventListener('input', calc);
+    calc();
+  </script>
+</Base>
